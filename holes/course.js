@@ -11,8 +11,8 @@ export const COURSES = {
     badge: 'CRAZY GOLF',
     par: 4,
     holesCount: 1,
-    description: 'Wild single-hole mini-golf prototype! Custom Dice Arsenal, rotating windmill blades, warp tubes, speed ramps, and bumper ricochet rails.',
-    features: ['Dice Arsenal', 'Warp Tubes', 'Spinning Windmill', 'Speed Ramps', 'Bumper Rails', 'Loop-de-Loop'],
+    description: 'Wild single-hole mini-golf prototype! Putter stroke variations (Tap, Flick, Hit, Whack, Blast), rotating windmill blades, warp tubes, speed ramps, and bumper ricochet rails.',
+    features: ['5 Putter Strokes', 'Bumper Ricochets', 'Warp Tubes', 'Speed Ramps', 'Spinning Windmill', 'Loop-de-Loop'],
     holes: [crazyHole],
     isCrazyGolf: true
   },

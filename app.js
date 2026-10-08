@@ -35,78 +35,65 @@ const TERRAIN = {
   funnel: { color: '#7c4dff', label: 'Loop-de-Loop' }
 };
 
-export const CRAZY_DICE = {
-  precision: {
-    id: 'precision',
-    name: 'Precision Die (d4)',
-    dieType: 'd4',
-    sides: 4,
+export const CRAZY_CLUBS = {
+  tap: {
+    id: 'tap',
+    name: 'Tap (d6/2)',
+    dieType: 'd6',
+    sides: 6,
     min: 1,
-    max: 4,
+    max: 3,
     hasScatter: false,
-    label: '🎯 Precision Die (d4: 1-4) — Zero Scatter',
-    perk: '🎯 Precision Die: 0 scatter (perfect for putts & windmill)'
+    label: '🟢 Tap (d6/2: 1–3) — Gentle Roll, No Scatter',
+    desc: '1–3 hexes movement, no scatter'
   },
-  standard: {
-    id: 'standard',
-    name: 'Standard Ball Die (d6)',
+  flick: {
+    id: 'flick',
+    name: 'Flick (d6)',
     dieType: 'd6',
     sides: 6,
     min: 1,
     max: 6,
-    hasScatter: true,
-    label: '⚪ Standard Ball Die (d6: 1-6) — Classic Roll',
-    perk: '⚪ Standard Die: 1-6 roll with minor scatter on 4+'
+    hasScatter: false,
+    label: '🔵 Flick (d6: 1–6) — Standard Roll, No Scatter',
+    desc: '1–6 hexes movement, no scatter'
   },
-  power: {
-    id: 'power',
-    name: 'Super-Bounce Die (d10)',
-    dieType: 'd10',
-    sides: 10,
-    min: 1,
+  hit: {
+    id: 'hit',
+    name: 'Hit (d6+2)',
+    dieType: 'd6',
+    sides: 6,
+    min: 3,
+    max: 8,
+    hasScatter: true,
+    label: '🟡 Hit (d6+2: 3–8) — Firm Strike, d6/3 Scatter',
+    desc: '3–8 hexes movement, d6/3 hexes scatter'
+  },
+  whack: {
+    id: 'whack',
+    name: 'Whack (d6+4)',
+    dieType: 'd6',
+    sides: 6,
+    min: 5,
     max: 10,
     hasScatter: true,
-    superBounce: true,
-    label: '💥 Super-Bounce Die (d10: 1-10) — High Velocity',
-    perk: '💥 Super-Bounce Die: 1-10 tiles, bank-shot velocity'
+    label: '🟠 Whack (d6+4: 5–10) — Hard Stroke, d6/2 Scatter',
+    desc: '5–10 hexes movement, d6/2 hexes scatter'
   },
-  sticky: {
-    id: 'sticky',
-    name: 'Sticky Lead Die (d6)',
+  blast: {
+    id: 'blast',
+    name: 'Blast (d6+6)',
     dieType: 'd6',
-    sides: 5,
-    min: 1,
-    max: 5,
-    hasScatter: false,
-    ignoresSlopes: true,
-    label: '⚓ Sticky Lead Die (d6: 1-5) — Ignores Slopes',
-    perk: '⚓ Sticky Lead: stops dead on landing, ignores slopes'
-  },
-  bumper: {
-    id: 'bumper',
-    name: 'Rubber Bumper Die (d8)',
-    dieType: 'd8',
-    sides: 8,
-    min: 2,
-    max: 7,
-    hasScatter: false,
-    elasticRicochet: true,
-    label: '🔴 Rubber Bumper Die (d8: 2-7) — Bank Bouncer',
-    perk: '🔴 Rubber Bumper: rebounds off rails with remaining distance'
-  },
-  chaos: {
-    id: 'chaos',
-    name: 'Chaos Die (d20)',
-    dieType: 'd20',
-    sides: 20,
-    min: 1,
-    max: 20,
+    sides: 6,
+    min: 7,
+    max: 12,
     hasScatter: true,
-    isChaos: true,
-    label: '🎲 Chaos Die (d20: 1-20) — Wild Shortcut',
-    perk: '🎲 Chaos Die: 18-20 = cosmic ace leap; 1-3 = dud misfire'
+    label: '🔴 Blast (d6+6: 7–12) — Full Power, d6/2 Scatter',
+    desc: '7–12 hexes movement, d6/2 hexes scatter'
   }
 };
+
+export const CRAZY_DICE = CRAZY_CLUBS;
 
 const HEX_DIRS = [
   { q: 0, r: -1 },  // N (↑)
@@ -296,8 +283,8 @@ function updateCrazyStatusBar() {
 
   const perkPill = document.getElementById('active-perk-pill');
   const clubVal = getSelectedClub();
-  if (perkPill && CRAZY_DICE[clubVal]) {
-    perkPill.innerText = CRAZY_DICE[clubVal].perk;
+  if (perkPill && CRAZY_CLUBS[clubVal]) {
+    perkPill.innerText = CRAZY_CLUBS[clubVal].label;
   }
 }
 
@@ -309,17 +296,16 @@ function updateClubOptions() {
   container.innerHTML = '';
 
   if (currentHole && currentHole.isCrazyGolf) {
-    if (!CRAZY_DICE[currentSelectedClub]) {
-      currentSelectedClub = 'precision';
+    if (!CRAZY_CLUBS[currentSelectedClub]) {
+      currentSelectedClub = 'tap';
     }
 
     const crazyList = [
-      { id: 'precision', title: 'Precision', sub: 'd4 • 0 Scat' },
-      { id: 'standard', title: 'Standard', sub: 'd6 • Classic' },
-      { id: 'power', title: 'Power', sub: 'd10 • Max' },
-      { id: 'sticky', title: 'Sticky', sub: 'd5 • No Slide' },
-      { id: 'bumper', title: 'Bumper', sub: 'd8 • Rebound' },
-      { id: 'chaos', title: 'Chaos', sub: 'd20 • Wild' }
+      { id: 'tap', title: 'Tap', sub: 'd6/2 • 1-3' },
+      { id: 'flick', title: 'Flick', sub: 'd6 • 1-6' },
+      { id: 'hit', title: 'Hit', sub: 'd6+2 • 3-8' },
+      { id: 'whack', title: 'Whack', sub: 'd6+4 • 5-10' },
+      { id: 'blast', title: 'Blast', sub: 'd6+6 • 7-12' }
     ];
 
     crazyList.forEach((die) => {
@@ -871,28 +857,31 @@ function animateCupSink(cupPx) {
   });
 }
 
-async function animateCrazyWaypoints(waypoints, dieConfig) {
-  for (let i = 0; i < waypoints.length - 1; i++) {
-    const wp1 = waypoints[i];
-    const wp2 = waypoints[i + 1];
-    const p1 = hexToPixel(wp1.q, wp1.r);
-    const p2 = hexToPixel(wp2.q, wp2.r);
+async function animateCrazyLegs(legs) {
+  for (let l = 0; l < legs.length; l++) {
+    const leg = legs[l];
+    const pStart = hexToPixel(leg.start.q, leg.start.r);
+    const pAimed = hexToPixel(leg.aimed.q, leg.aimed.r);
+    const pLanding = hexToPixel(leg.end.q, leg.end.r);
 
-    if (wp2.isWarp) {
-      await animateCupSink(p1);
+    if (leg.isWarpIn) {
+      const curve = buildShotCurve(pStart, pAimed, pLanding, false);
+      await animateShotFlight(curve, 'putter', Math.max(1, leg.dist), pAimed);
+      await animateCupSink(pLanding);
       await new Promise(r => setTimeout(r, 80));
-      await animateTouchdownRipple(p2);
+      if (leg.warpOut) {
+        await animateTouchdownRipple(hexToPixel(leg.warpOut.q, leg.warpOut.r));
+      }
     } else {
-      const dist = hexDistance(wp1, wp2);
-      const curve = buildShotCurve(p1, p2, p2, false);
-      const clubType = dieConfig.id === 'precision' ? 'putter' : 'shortIron';
-      await animateShotFlight(curve, clubType, Math.max(1, dist));
-      if (wp2.isRicochet) {
-        await animateTouchdownRipple(p2);
+      const curve = buildShotCurve(pStart, pAimed, pLanding, leg.hasScatter);
+      await animateShotFlight(curve, 'putter', Math.max(1, leg.dist), pAimed);
+      if (leg.isRicochet) {
+        await animateTouchdownRipple(pLanding);
       }
     }
   }
 }
+const animateCrazyWaypoints = animateCrazyLegs;
 
 function drawTrailSegment(p1, p2, color, width, isDashed = false, showArrow = true) {
   if (p1.x === p2.x && p1.y === p2.y) return;
@@ -967,24 +956,37 @@ function render() {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    if (trail.waypoints && trail.waypoints.length > 1) {
-      // Draw path through interactive obstacles and waypoints
-      for (let w = 0; w < trail.waypoints.length - 1; w++) {
-        const wp1 = trail.waypoints[w];
-        const wp2 = trail.waypoints[w + 1];
-        const p1 = hexToPixel(wp1.q, wp1.r);
-        const p2 = hexToPixel(wp2.q, wp2.r);
-        const isWarp = wp2.isWarp || (wp2.note && wp2.note.includes('Warp'));
-        const isRicochet = wp2.isRicochet || (wp2.note && wp2.note.includes('Ricochet'));
-        const color = isWarp ? '#00e5ff' : isRicochet ? '#e91e63' : '#d32f2f';
-        const isDashed = isWarp || isRicochet;
-        drawTrailSegment(p1, p2, color, 2.4, isDashed, w === trail.waypoints.length - 2);
+    if (trail.legs && trail.legs.length > 1) {
+      // Draw path through interactive obstacles and multiple legs
+      for (let l = 0; l < trail.legs.length; l++) {
+        const leg = trail.legs[l];
+        const p1 = hexToPixel(leg.start.q, leg.start.r);
+        const pAim = hexToPixel(leg.aimed.q, leg.aimed.r);
+        const p2 = hexToPixel(leg.end.q, leg.end.r);
+        const isRicochet = leg.isRicochet;
+        const color = leg.isWarpIn ? '#00e5ff' : isRicochet ? '#e91e63' : '#d32f2f';
+        const curve = buildShotCurve(p1, pAim, p2, leg.hasScatter);
+
+        ctx.beginPath();
+        ctx.moveTo(curve.p0.x, curve.p0.y);
+        ctx.bezierCurveTo(curve.p1.x, curve.p1.y, curve.p2.x, curve.p2.y, curve.p3.x, curve.p3.y);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = 'round';
+        ctx.stroke();
 
         if (isRicochet) {
           ctx.beginPath();
           ctx.arc(p2.x, p2.y, 3, 0, 2 * Math.PI);
           ctx.fillStyle = '#e91e63';
           ctx.fill();
+        }
+
+        if (l === trail.legs.length - 1) {
+          const tanX = curve.p3.x - curve.p2.x;
+          const tanY = curve.p3.y - curve.p2.y;
+          const angle = Math.atan2(tanY, tanX);
+          drawArrowHead(curve.p3.x, curve.p3.y, angle, color, 7);
         }
       }
     } else if (trail.curve) {
@@ -1566,15 +1568,14 @@ export function updateShotControlDisplay(dirRoll, scatDist, isPure = false) {
   subControl.innerHTML = `<span class="control-note">${note}</span> <span class="control-dist-tag">(${distLabel})</span>`;
 }
 
-export function getDistanceExplanation(club, distRoll, effectiveRoll, baseDistance, currentTerrain, isCrazyGolf = false, dieConfig = null) {
+export function getDistanceExplanation(club, distRoll, effectiveRoll, baseDistance, currentTerrain, isCrazyGolf = false, clubConfig = null) {
   if (isCrazyGolf) {
-    if (dieConfig && dieConfig.isChaos) {
-      if (distRoll >= 18) return `d20: ${distRoll} (miracle) = distance ${baseDistance}`;
-      if (distRoll <= 3) return `d20: ${distRoll} (dud) = distance 1`;
-      return `${distRoll}÷2 = distance ${baseDistance}`;
-    }
-    if (baseDistance !== distRoll) {
-      return `${distRoll} = distance ${baseDistance}`;
+    if (clubConfig) {
+      if (clubConfig.id === 'tap') return `d6: ${distRoll} ÷ 2 = distance ${baseDistance}`;
+      if (clubConfig.id === 'flick') return `d6: ${distRoll} = distance ${baseDistance}`;
+      if (clubConfig.id === 'hit') return `d6: ${distRoll} + 2 = distance ${baseDistance}`;
+      if (clubConfig.id === 'whack') return `d6: ${distRoll} + 4 = distance ${baseDistance}`;
+      if (clubConfig.id === 'blast') return `d6: ${distRoll} + 6 = distance ${baseDistance}`;
     }
     return baseDistance === 1 ? '1 tile' : `${baseDistance} tiles`;
   }
@@ -1660,42 +1661,33 @@ async function executeShot() {
   // CRAZY GOLF MODE SHOT RESOLUTION
   // ==========================================
   if (currentHole && currentHole.isCrazyGolf) {
-    const dieConfig = CRAZY_DICE[club] || CRAZY_DICE.precision;
+    const clubConfig = CRAZY_CLUBS[club] || CRAZY_CLUBS.tap;
 
-    // 1. Distance Die Roll
-    let distRoll = 1;
-    if (dieConfig.id === 'precision') distRoll = Math.floor(Math.random() * 4) + 1;
-    else if (dieConfig.id === 'standard') distRoll = Math.floor(Math.random() * 6) + 1;
-    else if (dieConfig.id === 'power') distRoll = Math.floor(Math.random() * 10) + 1;
-    else if (dieConfig.id === 'sticky') distRoll = Math.floor(Math.random() * 5) + 1;
-    else if (dieConfig.id === 'bumper') distRoll = Math.floor(Math.random() * 6) + 2;
-    else if (dieConfig.id === 'chaos') distRoll = Math.floor(Math.random() * 20) + 1;
+    // 1. Distance Die Roll (standard d6 for all putter strokes)
+    const distRoll = Math.floor(Math.random() * 6) + 1;
+    await animateDie('die-dist', distRoll, 400, 6);
 
-    await animateDie('die-dist', distRoll, 400, dieConfig.sides || 6);
-
-    let baseDistance = distRoll;
-    let obstacleNotes = [];
-
-    // Chaos Die Special resolution
-    if (dieConfig.isChaos) {
-      if (distRoll >= 18) {
-        obstacleNotes.push(`🎲 CHAOS ACE MIRACLE! (d20: ${distRoll}) Cosmic shortcut straight toward pin!`);
-        baseDistance = Math.min(18, hexDistance(shotStart, currentHole.cup || { q: 0, r: -19 }));
-      } else if (distRoll <= 3) {
-        obstacleNotes.push(`🎲 CHAOS MISFIRE! (d20: ${distRoll}) Dud stroke!`);
-        baseDistance = 1;
-      } else {
-        baseDistance = Math.min(9, Math.floor(distRoll / 2) + 1);
-      }
+    let baseDistance = 1;
+    if (clubConfig.id === 'tap') {
+      baseDistance = Math.ceil(distRoll / 2); // 1-3 hexes
+    } else if (clubConfig.id === 'flick') {
+      baseDistance = distRoll; // 1-6 hexes
+    } else if (clubConfig.id === 'hit') {
+      baseDistance = distRoll + 2; // 3-8 hexes
+    } else if (clubConfig.id === 'whack') {
+      baseDistance = distRoll + 4; // 5-10 hexes
+    } else if (clubConfig.id === 'blast') {
+      baseDistance = distRoll + 6; // 7-12 hexes
     }
 
-    document.getElementById('sub-dist').innerText = getDistanceExplanation(null, distRoll, distRoll, baseDistance, null, true, dieConfig);
+    let obstacleNotes = [];
+    document.getElementById('sub-dist').innerText = getDistanceExplanation(null, distRoll, distRoll, baseDistance, null, true, clubConfig);
 
     // 2. Scatter Roll
     let scatDist = 0;
     let scatDirIndex = 0;
 
-    if (dieConfig.hasScatter) {
+    if (clubConfig.hasScatter) {
       const dirRoll = Math.floor(Math.random() * 6) + 1;
       const scatRoll = Math.floor(Math.random() * 6) + 1;
 
@@ -1706,9 +1698,11 @@ async function executeShot() {
 
       scatDirIndex = dirRoll - 1;
 
-      if (dieConfig.id === 'standard') scatDist = distRoll >= 4 ? 1 : 0;
-      else if (dieConfig.id === 'power') scatDist = distRoll >= 7 ? 2 : 1;
-      else if (dieConfig.id === 'chaos') scatDist = Math.floor(Math.random() * 2) + 1;
+      if (clubConfig.id === 'hit') {
+        scatDist = Math.ceil(scatRoll / 3); // d6/3: 1 to 2 hexes
+      } else if (clubConfig.id === 'whack' || clubConfig.id === 'blast') {
+        scatDist = Math.ceil(scatRoll / 2); // d6/2: 1 to 3 hexes
+      }
 
       updateShotControlDisplay(dirRoll, scatDist);
     } else {
@@ -1721,7 +1715,9 @@ async function executeShot() {
     let currentStepPos = { q: shotStart.q, r: shotStart.r };
     let currentMoveDir = aimDir;
     let remainingSteps = baseDistance;
-    const waypoints = [{ q: currentStepPos.q, r: currentStepPos.r, note: 'Tee / Start' }];
+    const legs = [];
+    let currentLegStart = { ...shotStart };
+    let legStepCount = 0;
 
     while (remainingSteps > 0) {
       const nextHex = {
@@ -1730,49 +1726,57 @@ async function executeShot() {
       };
       const nextTerrain = getTerrainAt(nextHex.q, nextHex.r);
 
-      // A. Bumper Rail Encounter
+      // A. Bumper Rail Encounter: All strokes bank-ricochet off bumpers!
       if (nextTerrain === 'bumper') {
-        if (dieConfig.elasticRicochet || dieConfig.superBounce) {
-          let reflectDir = (currentMoveDir + 3) % 6;
-          if (currentStepPos.q > 0) {
-            reflectDir = (currentMoveDir + 4) % 6;
-          } else if (currentStepPos.q < 0) {
-            reflectDir = (currentMoveDir + 2) % 6;
-          }
-          currentMoveDir = reflectDir;
-          obstacleNotes.push('🔴 Rubber Bumper Ricochet!');
-          waypoints.push({ q: nextHex.q, r: nextHex.r, isRicochet: true, note: 'Ricochet' });
-          remainingSteps -= 1;
-          continue;
-        } else {
-          obstacleNotes.push('Bumper rail rebound: ball stopped safely');
-          waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, isRicochet: true, note: 'Bumper stop' });
-          remainingSteps = 0;
-          break;
+        let reflectDir = (currentMoveDir + 3) % 6;
+        if (currentStepPos.q > 0) {
+          reflectDir = (currentMoveDir + 4) % 6;
+        } else if (currentStepPos.q < 0) {
+          reflectDir = (currentMoveDir + 2) % 6;
         }
+        legs.push({
+          start: { ...currentLegStart },
+          aimed: { ...nextHex },
+          end: { ...nextHex },
+          dist: Math.max(1, legStepCount + 1),
+          isRicochet: true
+        });
+        currentMoveDir = reflectDir;
+        currentStepPos = nextHex;
+        currentLegStart = { ...nextHex };
+        legStepCount = 0;
+        obstacleNotes.push('💥 Bumper rail bank ricochet!');
+        remainingSteps -= 1;
+        continue;
       }
 
       // B. Rotating Windmill Gate Encounter
       if (nextTerrain === 'windmill') {
         if (!windmillOpen) {
           obstacleNotes.push('⛔ CLATTER! Ball blocked by spinning windmill blades!');
-          waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, note: 'Windmill Blocked' });
+          legs.push({
+            start: { ...currentLegStart },
+            aimed: { ...currentStepPos },
+            end: { ...currentStepPos },
+            dist: Math.max(1, legStepCount),
+            isBlocked: true
+          });
           remainingSteps = 0;
           break;
         } else {
           obstacleNotes.push('⚙️ SWOOSH! Slipped clean through the open windmill gate!');
           currentStepPos = nextHex;
-          waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, note: 'Windmill Passed' });
+          legStepCount += 1;
           remainingSteps -= 1;
           continue;
         }
       }
 
-      // C. Speed Ramp Encounter
+      // C. Speed Ramp Encounter (Elevation boost +2)
       if (nextTerrain === 'ramp') {
         obstacleNotes.push('🚀 Speed Ramp Boost! Catapulted +2 tiles forward!');
         currentStepPos = nextHex;
-        waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, note: 'Speed Ramp' });
+        legStepCount += 1;
         remainingSteps += 1;
         continue;
       }
@@ -1780,15 +1784,22 @@ async function executeShot() {
       // D. Warp Tube Encounter
       if (nextTerrain === 'tube_in') {
         obstacleNotes.push('🌀 Warp Tube Activated! Teleported to upper green runway!');
-        waypoints.push({ q: nextHex.q, r: nextHex.r, isWarp: true, note: 'Warp In' });
-        const outPos = currentHole.tubeOutPos || { q: -1, r: -14 };
+        const outPos = currentHole.tubeOutPos || { q: 2, r: -16 };
+        legs.push({
+          start: { ...currentLegStart },
+          aimed: { ...nextHex },
+          end: { ...nextHex },
+          dist: Math.max(1, legStepCount + 1),
+          isWarpIn: true,
+          warpOut: { ...outPos }
+        });
         currentStepPos = { ...outPos };
-        waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, isWarp: true, note: 'Warp Out' });
-
+        currentLegStart = { ...outPos };
+        legStepCount = 0;
         const exitStep = { q: currentStepPos.q + HEX_DIRS[0].q, r: currentStepPos.r + HEX_DIRS[0].r };
         if (isLand(exitStep.q, exitStep.r)) {
           currentStepPos = exitStep;
-          waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, note: 'Exit Momentum' });
+          legStepCount = 1;
         }
         remainingSteps = 0;
         break;
@@ -1798,40 +1809,68 @@ async function executeShot() {
       if (nextTerrain === 'funnel') {
         if (baseDistance >= 2) {
           obstacleNotes.push('↺ Loop-de-Loop! Spiral track curved ball onto putting green!');
-          waypoints.push({ q: nextHex.q, r: nextHex.r, note: 'Funnel Entry' });
+          legs.push({
+            start: { ...currentLegStart },
+            aimed: { ...nextHex },
+            end: { ...nextHex },
+            dist: Math.max(1, legStepCount + 1),
+            isFunnel: true
+          });
           currentStepPos = { q: 1, r: -18 };
-          waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, note: 'Green Arrival' });
-          remainingSteps = 0;
-          break;
+          currentLegStart = { ...currentStepPos };
+          legStepCount = 1;
         } else {
           currentStepPos = nextHex;
-          waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, note: 'Funnel Stop' });
-          remainingSteps = 0;
-          break;
+          legStepCount += 1;
         }
+        remainingSteps = 0;
+        break;
       }
 
-      // Regular fairway/green advancement
+      // Regular advancement
       currentStepPos = nextHex;
-      waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, note: 'Step' });
+      legStepCount += 1;
       remainingSteps -= 1;
     }
 
-    // 4. Apply Scatter (if any and not in hole)
+    const aimedFinalPos = { ...currentStepPos };
+
+    // 4. Scatter Calculation
     let scatterPos = null;
-    if (scatDist > 0 && getTerrainAt(currentStepPos.q, currentStepPos.r) !== 'hole') {
+    if (scatDist > 0 && getTerrainAt(aimedFinalPos.q, aimedFinalPos.r) !== 'hole') {
       const scatHex = {
-        q: currentStepPos.q + HEX_DIRS[scatDirIndex].q * scatDist,
-        r: currentStepPos.r + HEX_DIRS[scatDirIndex].r * scatDist
+        q: aimedFinalPos.q + HEX_DIRS[scatDirIndex].q * scatDist,
+        r: aimedFinalPos.r + HEX_DIRS[scatDirIndex].r * scatDist
       };
       if (isLand(scatHex.q, scatHex.r) && getTerrainAt(scatHex.q, scatHex.r) !== 'bumper') {
-        currentStepPos = scatHex;
         scatterPos = { ...scatHex };
-        waypoints.push({ q: currentStepPos.q, r: currentStepPos.r, note: 'Scatter' });
       }
     }
 
-    let landingHex = { ...currentStepPos };
+    const landingHex = scatterPos ? { ...scatterPos } : { ...aimedFinalPos };
+
+    // Finish building legs
+    if (legStepCount > 0 || legs.length === 0) {
+      legs.push({
+        start: { ...currentLegStart },
+        aimed: { ...aimedFinalPos },
+        end: { ...landingHex },
+        dist: Math.max(1, legStepCount),
+        hasScatter: scatDist > 0 && !!scatterPos
+      });
+    } else if (legs.length > 0 && scatterPos) {
+      const lastLeg = legs[legs.length - 1];
+      lastLeg.end = { ...landingHex };
+      lastLeg.hasScatter = true;
+    }
+
+    // Toggle Windmill Gate state for the next stroke!
+    windmillOpen = !windmillOpen;
+    updateCrazyStatusBar();
+
+    // Animate the shot through all legs using the standard golf putter animation!
+    await animateCrazyLegs(legs);
+
     let landingTerrain = getTerrainAt(landingHex.q, landingHex.r);
 
     let hazardType = null;
@@ -1852,32 +1891,20 @@ async function executeShot() {
       playerPos = { q: landingHex.q, r: landingHex.r };
       strokeCount += 1;
 
-      // 5. Slope Arrows check
-      if (dieConfig.ignoresSlopes) {
-        obstacleNotes.push('⚓ Sticky Lead Die: Stopped dead! Ignored slope break');
-      } else {
-        const arrow = currentHole.slopeArrows[`${playerPos.q},${playerPos.r}`];
-        if (arrow !== undefined) {
-          const slideQ = playerPos.q + HEX_DIRS[arrow].q;
-          const slideR = playerPos.r + HEX_DIRS[arrow].r;
-          slopeFrom = { q: playerPos.q, r: playerPos.r };
-          if (isLand(slideQ, slideR) && getTerrainAt(slideQ, slideR) !== 'bumper') {
-            slopeTo = { q: slideQ, r: slideR };
-            playerPos.q = slideQ;
-            playerPos.r = slideR;
-            waypoints.push({ q: playerPos.q, r: playerPos.r, note: 'Slope Slide' });
-            obstacleNotes.push('Contour slope break slide');
-          }
+      // 5. Slope Arrows check (All putter strokes slide along slope arrows upon landing!)
+      const arrow = currentHole.slopeArrows && currentHole.slopeArrows[`${playerPos.q},${playerPos.r}`];
+      if (arrow !== undefined) {
+        const slideQ = playerPos.q + HEX_DIRS[arrow].q;
+        const slideR = playerPos.r + HEX_DIRS[arrow].r;
+        slopeFrom = { q: playerPos.q, r: playerPos.r };
+        if (isLand(slideQ, slideR) && getTerrainAt(slideQ, slideR) !== 'bumper') {
+          slopeTo = { q: slideQ, r: slideR };
+          playerPos.q = slideQ;
+          playerPos.r = slideR;
+          obstacleNotes.push('Contour slope break slide');
         }
       }
     }
-
-    // Toggle Windmill Gate state for the next stroke!
-    windmillOpen = !windmillOpen;
-    updateCrazyStatusBar();
-
-    // Animate the shot through all waypoints
-    await animateCrazyWaypoints(waypoints, dieConfig);
 
     if (hazardType && hazardPos && dropPos) {
       document.getElementById('status-message').innerText = 'Water hazard! +1 penalty stroke. Ball dropping to nearest land...';
@@ -1891,19 +1918,22 @@ async function executeShot() {
       await animateCupSink(hexToPixel(playerPos.q, playerPos.r));
     }
 
+    const fullCurve = (legs.length === 1)
+      ? buildShotCurve(hexToPixel(shotStart.q, shotStart.r), hexToPixel(legs[0].aimed.q, legs[0].aimed.r), hexToPixel(landingHex.q, landingHex.r), scatDist > 0 && !!scatterPos)
+      : null;
+
     shotTrails.push({
       stroke: strokeCount,
       club: club,
       start: shotStart,
-      aimed: landingHex,
-      hasScatter: scatDist > 0,
+      aimed: aimedFinalPos,
+      landing: landingHex,
+      hasScatter: scatDist > 0 && !!scatterPos,
       scatter: scatterPos,
-      waypoints: waypoints,
-      hazard: hazardType,
-      hazardPos: hazardPos,
-      dropPos: dropPos,
-      slopeFrom: slopeFrom,
-      slopeTo: slopeTo,
+      curve: fullCurve,
+      legs: legs.length > 1 ? legs : null,
+      hazard: hazardType ? { type: hazardType, pos: hazardPos, drop: dropPos } : null,
+      slope: slopeFrom ? { from: slopeFrom, to: slopeTo } : null,
       final: { ...playerPos }
     });
 

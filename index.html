@@ -92,14 +92,14 @@
           </div>
           <h2 class="course-name">Neon Windmill &amp; Warp Tubes</h2>
           <p class="course-desc">
-            Single-hole crazy mini-golf prototype! Roll with a custom Dice Arsenal (Precision, Super-Bounce, Sticky Lead, Rubber Bumper, Chaos d20) across spinning windmill blades, warp tubes, turbo speed ramps, and bumper ricochet rails.
+            Single-hole crazy mini-golf prototype! Control putter stroke power (Tap, Flick, Hit, Whack, Blast) across spinning windmill blades, warp tubes, turbo speed ramps, and elastic bumper rails.
           </p>
           <div class="course-features">
-            <span class="feat-tag">Dice Arsenal</span>
+            <span class="feat-tag">5 Putter Strokes</span>
+            <span class="feat-tag">Bumper Ricochets</span>
             <span class="feat-tag">Warp Tubes</span>
-            <span class="feat-tag">Spinning Windmill</span>
             <span class="feat-tag">Speed Ramps</span>
-            <span class="feat-tag">Bumper Rails</span>
+            <span class="feat-tag">Spinning Windmill</span>
             <span class="feat-tag">Loop-de-Loop</span>
           </div>
           <button class="btn-tee-off btn-crazy" id="start-crazy-btn" data-course="crazy">TEE OFF CRAZY GOLF →</button>
@@ -129,7 +129,7 @@
         <!-- Crazy Golf Active Obstacle & Dice Status Bar -->
         <div id="crazy-status-bar" style="display: none;">
           <span class="crazy-tag" id="windmill-status-pill">⚙️ Windmill: OPEN</span>
-          <span class="crazy-tag" id="active-perk-pill">🎯 Precision Die (0 Scatter)</span>
+          <span class="crazy-tag" id="active-perk-pill">🟢 Tap: 1–3 hexes (No Scatter)</span>
         </div>
       </header>
 
@@ -277,11 +277,20 @@
           <div class="rules-section rules-section-crazy">
             <h4 class="rules-section-title" style="color: #880e4f;">⚡ CRAZY GOLF (MINI-GOLF) MODE</h4>
             <ul class="rules-bullets">
-              <li><strong>Dice Arsenal:</strong> Choose between Precision (d4), Standard (d6), Super-Bounce (d10), Sticky Lead (ignores slopes), Rubber Bumper (bank ricochets), or Chaos (d20).</li>
+              <li><strong>Putter Stroke Powers:</strong> All clubs are variations of how hard you strike the putter:
+                <ul style="margin: 4px 0; padding-left: 16px;">
+                  <li><strong>Tap:</strong> d6/2 (1–3 hexes movement, no scatter)</li>
+                  <li><strong>Flick:</strong> d6 (1–6 hexes movement, no scatter)</li>
+                  <li><strong>Hit:</strong> d6+2 (3–8 hexes movement, d6/3 hexes scatter)</li>
+                  <li><strong>Whack:</strong> d6+4 (5–10 hexes movement, d6/2 hexes scatter)</li>
+                  <li><strong>Blast:</strong> d6+6 (7–12 hexes movement, d6/2 hexes scatter)</li>
+                </ul>
+              </li>
+              <li><strong>Bumper Rails:</strong> All strokes bank and bounce elastically off bumper rails with remaining distance.</li>
+              <li><strong>Speed Ramps:</strong> Boosts the ball forward (+1 to +2 distance) across waterways and tracks.</li>
+              <li><strong>Slopes:</strong> All strokes slide 1 hex along slope arrows upon landing.</li>
               <li><strong>Spinning Windmill:</strong> Alternates OPEN &amp; BLOCKED each stroke! Time your roll to slip past the blades.</li>
               <li><strong>Warp Tubes:</strong> Roll into cyan portal (IN) to warp instantly out of exit (OUT) with forward momentum.</li>
-              <li><strong>Speed Ramps:</strong> Catapults ball +2 distance across water chasms onto the upper deck.</li>
-              <li><strong>Bumper Rails:</strong> Perimeter walls rebound ball safely instead of going out of bounds.</li>
               <li><strong>Loop-de-Loop:</strong> Roll into spiral funnel with speed to loop directly toward the cup.</li>
             </ul>
           </div>
