@@ -14,11 +14,11 @@ function parseCoords(spec) {
 }
 
 export const parklandCourse = [
-  // Hole 1: The Meadow - Par 4
+  // Hole 1: The Meadows - Par 4
   {
     id: 1,
     par: 4,
-    name: "The Meadow",
+    name: "The Meadows",
       tee: { q: 2, r: -1 },
     hole: { q: 1, r: -18 },
     slopeArrows: {
