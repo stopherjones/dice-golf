@@ -229,29 +229,6 @@ body {
   box-shadow: 0 1px 0 #b35900;
 }
 
-.btn-reroll {
-  background-color: #f0ece1;
-  color: #1a1a1a;
-  border: 2px solid #1a1a1a;
-  border-radius: 4px;
-  padding: 7px 10px;
-  font-weight: bold;
-  font-size: 0.75rem;
-  cursor: pointer;
-  box-shadow: 0 3px 0 #1a1a1a;
-  white-space: nowrap;
-  transition: transform 0.05s ease, background-color 0.15s ease;
-}
-
-.btn-reroll:hover {
-  background-color: #e2dac7;
-}
-
-.btn-reroll:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 #1a1a1a;
-}
-
 .course-par-tag {
   color: #555;
   font-size: 0.68rem;
@@ -1205,4 +1182,3 @@ body {
 .rules-bullets li:last-child {
   margin-bottom: 0;
 }
-

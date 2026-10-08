@@ -24,7 +24,7 @@
       </header>
 
       <div id="course-cards-container">
-        <!-- Hole of the Day (Procedural Daily Challenge) -->
+        <!-- Hole of the Day (random selection from the existing courses) -->
         <div class="course-card course-card-daily" id="card-daily">
           <div class="course-card-top">
             <span class="badge badge-daily">⭐ HOLE OF THE DAY</span>
@@ -35,15 +35,14 @@
             <span class="daily-date-badge" id="daily-date-badge">Today</span>
           </div>
           <p class="course-desc" id="daily-hole-desc">
-            Randomly generated daily golf challenge. Features procedural fairways, unique hazard hazards, and dynamic slope contours.
+            A daily pick from the Parkland, Links, and Crazy Golf courses.
           </p>
           <div class="course-features" id="daily-features-container">
-            <span class="feat-tag">Procedural Map</span>
+            <span class="feat-tag">Random Course Hole</span>
             <span class="feat-tag">Daily Challenge</span>
           </div>
           <div class="daily-actions-row">
             <button class="btn-tee-off btn-daily" id="start-daily-btn" data-course="daily">TEE OFF DAILY HOLE →</button>
-            <button type="button" class="btn-reroll" id="reroll-daily-btn" title="Roll a new random hole seed">🎲 New Hole</button>
           </div>
         </div>
 
@@ -305,4 +304,3 @@
   <script type="module" src="app.js"></script>
 </body>
 </html>
-

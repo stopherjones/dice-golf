@@ -1,14 +1,24 @@
 import { crazyHole } from './holes/crazyHole.js';
 import { parklandCourse } from './holes/parkland.js';
 import { linksCourse } from './holes/links.js';
-import { generateDailyHole } from './holes/dailyHole.js';
+import { COURSES } from './holes/course.js';
+import {
+  GRID_Q_MAX,
+  GRID_Q_MIN,
+  GRID_ROW_MAX,
+  GRID_ROW_MIN,
+  gridRowToAxialR,
+  isGridEdge,
+  isWithinGrid,
+  clipHoleToGrid
+} from './holes/grid.js';
 
 const canvas = document.getElementById('edit-canvas');
 const ctx = canvas.getContext('2d');
 
-const HEX_RADIUS = 9.8;
+const HEX_RADIUS = 8.5;
 const ORIGIN_X = 190;
-const ORIGIN_Y = 415;
+const ORIGIN_Y = 381;
 
 const TERRAIN = {
   tee: '#cddc39',
@@ -201,12 +211,13 @@ function drawHex(x, y, type, slopeDir = null) {
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  for (let r = -24; r <= 3; r++) {
-    for (let q = -12; q <= 12; q++) {
+  for (let row = GRID_ROW_MIN; row <= GRID_ROW_MAX; row++) {
+    for (let q = GRID_Q_MIN; q <= GRID_Q_MAX; q++) {
+      const r = gridRowToAxialR(q, row);
       const { x, y } = hexToPixel(q, r);
       if (x >= -15 && x <= canvas.width + 15 && y >= -15 && y <= canvas.height + 15) {
         const key = `${q},${r}`;
-        const type = paintedLayout[key] || (q <= -11 || q >= 11 || r <= -23 || r >= 3 ? 'trees' : 'rough');
+        const type = paintedLayout[key] || (isGridEdge(q, r) ? 'trees' : 'rough');
         const slope = paintedSlopes[key] !== undefined ? paintedSlopes[key] : null;
         drawHex(x, y, type, slope);
       }
@@ -229,6 +240,7 @@ function handlePaint(e) {
     const curType = paintedLayout[key] || 'rough';
     hoverTerrain.textContent = TERRAIN_NAMES[curType] || curType;
   }
+  if (!isWithinGrid(q, r)) return;
   
   if (currentBrush === 'slope') {
     paintedSlopes[key] = selectedSlopeDir;
@@ -432,6 +444,9 @@ export function loadExistingCode() {
       });
     }
 
+    const clippedHole = clipHoleToGrid({ layout: paintedLayout, slopeArrows: paintedSlopes });
+    paintedLayout = clippedHole.layout;
+    paintedSlopes = clippedHole.slopeArrows;
     render();
     showStatus('Code successfully imported into editor canvas!');
   } catch (err) {
@@ -451,12 +466,9 @@ export function loadHoleObject(holeObj) {
   paintedLayout = {};
   paintedSlopes = {};
 
-  if (holeObj.layout) {
-    paintedLayout = { ...holeObj.layout };
-  }
-  if (holeObj.slopeArrows) {
-    paintedSlopes = { ...holeObj.slopeArrows };
-  }
+  const clippedHole = clipHoleToGrid(holeObj);
+  paintedLayout = clippedHole.layout;
+  paintedSlopes = clippedHole.slopeArrows;
 
   render();
   generateCode();
@@ -467,8 +479,7 @@ export function loadPreset(key) {
   if (!key) return;
 
   if (key === 'daily') {
-    const daily = generateDailyHole();
-    loadHoleObject(daily.holes[0]);
+    loadHoleObject(COURSES.daily.holes[0]);
   } else if (key === 'crazy') {
     loadHoleObject(crazyHole);
   } else if (key === 'parkland1') {
@@ -566,9 +577,11 @@ document.getElementById('btn-clear-canvas').addEventListener('click', () => {
 });
 
 document.getElementById('btn-fill-trees').addEventListener('click', () => {
-  for (let r = -24; r <= 3; r++) {
-    for (let q = -12; q <= 12; q++) {
-      if (q <= -10 || q >= 10 || r <= -22 || r >= 2) {
+  for (let row = GRID_ROW_MIN; row <= GRID_ROW_MAX; row++) {
+    for (let q = GRID_Q_MIN; q <= GRID_Q_MAX; q++) {
+      const r = gridRowToAxialR(q, row);
+      if (q <= GRID_Q_MIN + 2 || q >= GRID_Q_MAX - 2 ||
+          row <= GRID_ROW_MIN + 2 || row >= GRID_ROW_MAX - 1) {
         paintedLayout[`${q},${r}`] = 'trees';
       }
     }

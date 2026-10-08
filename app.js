@@ -1,4 +1,13 @@
-import { COURSES, refreshDailyHole } from './holes/course.js';
+import { COURSES } from './holes/course.js';
+import {
+  GRID_Q_MAX,
+  GRID_Q_MIN,
+  GRID_ROW_MAX,
+  GRID_ROW_MIN,
+  gridRowToAxialR,
+  isGridEdge,
+  isWithinGrid
+} from './holes/grid.js';
 
 const canvas = document.getElementById('golf-canvas');
 const ctx = canvas.getContext('2d');
@@ -199,9 +208,10 @@ function isAdjacentToHole(pos) {
 }
 
 function getTerrainAt(q, r) {
+  if (!isWithinGrid(q, r)) return 'trees';
   const key = `${q},${r}`;
   if (currentHole.layout[key]) return currentHole.layout[key];
-  if (q <= -11 || q >= 11 || r <= -24 || r >= 3) return 'trees';
+  if (isGridEdge(q, r)) return 'trees';
   return 'rough';
 }
 
@@ -927,8 +937,9 @@ function render() {
   const viewMinY = -camera.panY / camera.scale - 25;
   const viewMaxY = (cssHeight - camera.panY) / camera.scale + 25;
 
-  for (let r = -25; r <= 4; r++) {
-    for (let q = -12; q <= 12; q++) {
+  for (let row = GRID_ROW_MIN; row <= GRID_ROW_MAX; row++) {
+    for (let q = GRID_Q_MIN; q <= GRID_Q_MAX; q++) {
+      const r = gridRowToAxialR(q, row);
       const { x, y } = hexToPixel(q, r);
       if (x >= viewMinX && x <= viewMaxX && y >= viewMinY && y <= viewMaxY) {
         const type = getTerrainAt(q, r);
@@ -1306,11 +1317,12 @@ function clampCamera() {
   const cssWidth = canvas.width / dpr;
   const cssHeight = canvas.height / dpr;
 
-  const worldMinX = -40;
-  const worldMaxX = 400;
-  const worldMinY = -120;
+  const boardBounds = getBoardPixelBounds();
+  const worldMinX = boardBounds.minX;
+  const worldMaxX = boardBounds.maxX;
+  const worldMinY = boardBounds.minY;
   const ballPx = (playerPos && playerPos.q !== undefined) ? hexToPixel(playerPos.q, playerPos.r) : { x: 180, y: 395 };
-  const worldMaxY = Math.max(520, ballPx.y + 140);
+  const worldMaxY = Math.max(boardBounds.maxY, ballPx.y + 140);
 
   const minPanX = cssWidth - worldMaxX * camera.scale - 60;
   const maxPanX = -worldMinX * camera.scale + 60;
@@ -1336,45 +1348,7 @@ function fitHole() {
   const cssWidth = canvas.width / dpr;
   const cssHeight = canvas.height / dpr;
 
-  let minQ = currentHole.tee.q;
-  let maxQ = currentHole.tee.q;
-  let minR = currentHole.tee.r;
-  let maxR = currentHole.tee.r;
-
-  for (const key of Object.keys(currentHole.layout)) {
-    const [qStr, rStr] = key.split(',');
-    const q = parseInt(qStr, 10);
-    const r = parseInt(rStr, 10);
-    if (!isNaN(q) && !isNaN(r)) {
-      if (q < minQ) minQ = q;
-      if (q > maxQ) maxQ = q;
-      if (r < minR) minR = r;
-      if (r > maxR) maxR = r;
-    }
-  }
-
-  const holePos = getHolePos();
-  if (holePos) {
-    minQ = Math.min(minQ, holePos.q);
-    maxQ = Math.max(maxQ, holePos.q);
-    minR = Math.min(minR, holePos.r);
-    maxR = Math.max(maxR, holePos.r);
-  }
-
-  minQ -= 1;
-  maxQ += 1;
-  minR -= 1;
-  maxR += 1;
-
-  const p1 = hexToPixel(minQ, minR);
-  const p2 = hexToPixel(maxQ, minR);
-  const p3 = hexToPixel(minQ, maxR);
-  const p4 = hexToPixel(maxQ, maxR);
-
-  const minX = Math.min(p1.x, p2.x, p3.x, p4.x) - 16;
-  const maxX = Math.max(p1.x, p2.x, p3.x, p4.x) + 16;
-  const minY = Math.min(p1.y, p2.y, p3.y, p4.y) - 16;
-  const maxY = Math.max(p1.y, p2.y, p3.y, p4.y) + 16;
+  const { minX, maxX, minY, maxY } = getBoardPixelBounds(16);
 
   const boxW = Math.max(140, maxX - minX);
   const boxH = Math.max(180, maxY - minY);
@@ -1397,6 +1371,30 @@ function fitHole() {
   clampCamera();
   updateZoomUI();
   render();
+}
+
+function getBoardPixelBounds(padding = HEX_RADIUS) {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  for (let q = GRID_Q_MIN; q <= GRID_Q_MAX; q++) {
+    for (const row of [GRID_ROW_MIN, GRID_ROW_MAX]) {
+      const { x, y } = hexToPixel(q, gridRowToAxialR(q, row));
+      minX = Math.min(minX, x - HEX_RADIUS);
+      maxX = Math.max(maxX, x + HEX_RADIUS);
+      minY = Math.min(minY, y - HEX_RADIUS * Math.sqrt(3) / 2);
+      maxY = Math.max(maxY, y + HEX_RADIUS * Math.sqrt(3) / 2);
+    }
+  }
+
+  return {
+    minX: minX - padding,
+    maxX: maxX + padding,
+    minY: minY - padding,
+    maxY: maxY + padding
+  };
 }
 
 function centerOnBall(positionAtBottom = true) {
@@ -2291,13 +2289,6 @@ function hideRulesModal() {
 document.getElementById('start-daily-btn').addEventListener('click', () => startCourse('daily'));
 document.getElementById('card-daily').addEventListener('click', (e) => {
   if (e.target.tagName !== 'BUTTON') startCourse('daily');
-});
-
-document.getElementById('reroll-daily-btn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const randomSeed = Math.floor(Math.random() * 900000 + 100000);
-  refreshDailyHole(String(randomSeed));
-  updateDailyHoleCardUI();
 });
 
 document.getElementById('start-parkland-btn').addEventListener('click', () => startCourse('parkland'));
