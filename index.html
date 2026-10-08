@@ -15,7 +15,10 @@
     <!-- LANDING SCREEN (COURSE SELECTION) -->
     <div id="landing-screen">
       <header id="landing-header">
-        <div class="logo-badge">⛳ 1980s TABLETOP EDITION</div>
+        <div class="landing-header-top">
+          <div class="logo-badge">⛳ 1980s TABLETOP EDITION</div>
+          <button type="button" id="toggle-rules-btn" class="btn-rules-header">📖 Rules &amp; Club Guide</button>
+        </div>
         <h1 id="landing-title">PAPER &amp; DICE GOLF</h1>
         <p class="landing-subtitle">Choose your 9-Hole Championship Course</p>
       </header>
@@ -102,38 +105,6 @@
           <button class="btn-tee-off btn-crazy" id="start-crazy-btn" data-course="crazy">TEE OFF CRAZY GOLF →</button>
         </div>
       </div>
-
-      <!-- Quick Rules Drawer Toggle -->
-      <footer id="landing-footer">
-        <div class="landing-footer-btns">
-          <button id="toggle-rules-btn" class="btn-secondary">📖 Rules &amp; Club Guide</button>
-          <a href="/editor" class="btn-secondary btn-editor-link" target="_blank">🛠️ Hole Editor ↗</a>
-        </div>
-        <div id="rules-drawer" class="rules-collapsed">
-          <div class="rules-content">
-            <h4>HOW TO PLAY (TRADITIONAL):</h4>
-            <ul>
-              <li><strong>Driver (1D6+4):</strong> Longest drive; scatter roll applied. Tee only.</li>
-              <li><strong>Long Iron (1D6+2):</strong> Strong approach; minor scatter. Tee or fairway.</li>
-              <li><strong>Short Iron (1D6):</strong> Precise pitch; no scatter. Anywhere on land.</li>
-              <li><strong>Putter (1D6: 1-3):</strong> Controlled roll for greens &amp; close approaches.</li>
-              <li><strong>Sand Bunkers:</strong> -1 penalty to your distance D6 roll (min 0).</li>
-              <li><strong>Water &amp; Trees (OB):</strong> Nearest land drop + 1 penalty stroke.</li>
-              <li><strong>Gimme (+1):</strong> Ball adjacent to hole (1 hex) can be finished instantly.</li>
-              <li><strong>Slope Arrows (↑):</strong> Slide the ball 1 hex in arrow direction upon landing.</li>
-            </ul>
-            <h4 style="margin-top: 8px; color: #d81b60;">CRAZY GOLF (MINI-GOLF) MODE:</h4>
-            <ul>
-              <li><strong>Dice Arsenal:</strong> Select from Precision (d4), Standard (d6), Super-Bounce (d10), Sticky Lead (ignores slopes), Rubber Bumper (bank ricochets), or Chaos (d20).</li>
-              <li><strong>Spinning Windmill:</strong> Alternates OPEN &amp; BLOCKED each stroke! Time your roll to slip past the blades.</li>
-              <li><strong>Warp Tubes:</strong> Roll into the cyan portal (IN) to warp instantly out of the exit (OUT) with forward momentum.</li>
-              <li><strong>Speed Ramps:</strong> Catapults the ball +2 distance across water chasms onto the upper deck.</li>
-              <li><strong>Bumper Rails:</strong> Striking perimeter walls rebounds the ball safely instead of going out of bounds.</li>
-              <li><strong>Loop-de-Loop:</strong> Roll into the spiral funnel with speed to loop directly toward the cup.</li>
-            </ul>
-          </div>
-        </div>
-      </footer>
     </div>
 
     <!-- GAMEPLAY SCREEN -->
@@ -142,7 +113,10 @@
         <nav id="game-nav">
           <button id="back-to-courses-btn" class="btn-nav">← Courses</button>
           <span id="current-course-badge" class="nav-course-name">Meadow Wood Parkland</span>
-          <button id="view-scorecard-btn" class="btn-nav">Scorecard 📋</button>
+          <div class="nav-btn-group">
+            <button id="game-rules-btn" class="btn-nav" title="Rules &amp; Club Guide">Rules 📖</button>
+            <button id="view-scorecard-btn" class="btn-nav">Scorecard 📋</button>
+          </div>
         </nav>
 
         <div id="scoreboard">
@@ -273,6 +247,47 @@
         <div class="modal-footer">
           <button id="modal-restart-course-btn" class="btn-secondary">Restart Round</button>
           <button id="modal-clubhouse-btn" class="btn-primary">Return to Courses</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RULES & CLUB GUIDE MODAL -->
+    <div id="rules-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-card rules-modal-card">
+        <div class="modal-header">
+          <h3 id="rules-modal-title">📖 Rules &amp; Club Guide</h3>
+          <button id="close-rules-modal-btn" class="btn-close" aria-label="Close rules">✕</button>
+        </div>
+        <div class="modal-body rules-modal-body">
+          <div class="rules-section">
+            <h4 class="rules-section-title">⛳ HOW TO PLAY (TRADITIONAL GOLF)</h4>
+            <ul class="rules-bullets">
+              <li><strong>Driver (1D6+4):</strong> Longest drive (5–10 hexes); scatter roll applied. Tee only.</li>
+              <li><strong>Long Iron (1D6+2):</strong> Strong approach (3–8 hexes); minor scatter. Tee or fairway.</li>
+              <li><strong>Short Iron (1D6):</strong> Precise pitch (1–6 hexes); no scatter. Anywhere on land.</li>
+              <li><strong>Putter (1D6: 1–3):</strong> Controlled roll (1–3 hexes) for greens &amp; close approaches.</li>
+              <li><strong>Sand Bunkers:</strong> Short iron only; -2 distance disadvantage (min 0).</li>
+              <li><strong>Rough / Deep Rough:</strong> -1 penalty to all club distance rolls (min 1).</li>
+              <li><strong>Water &amp; Trees (Out of Bounds):</strong> Nearest land drop + 1 penalty stroke.</li>
+              <li><strong>Gimme (+1 stroke):</strong> Ball adjacent to hole (1 hex away) can be sunk instantly.</li>
+              <li><strong>Slope Arrows (↑):</strong> Slide the ball 1 hex in arrow direction upon landing.</li>
+            </ul>
+          </div>
+
+          <div class="rules-section rules-section-crazy">
+            <h4 class="rules-section-title" style="color: #880e4f;">⚡ CRAZY GOLF (MINI-GOLF) MODE</h4>
+            <ul class="rules-bullets">
+              <li><strong>Dice Arsenal:</strong> Choose between Precision (d4), Standard (d6), Super-Bounce (d10), Sticky Lead (ignores slopes), Rubber Bumper (bank ricochets), or Chaos (d20).</li>
+              <li><strong>Spinning Windmill:</strong> Alternates OPEN &amp; BLOCKED each stroke! Time your roll to slip past the blades.</li>
+              <li><strong>Warp Tubes:</strong> Roll into cyan portal (IN) to warp instantly out of exit (OUT) with forward momentum.</li>
+              <li><strong>Speed Ramps:</strong> Catapults ball +2 distance across water chasms onto the upper deck.</li>
+              <li><strong>Bumper Rails:</strong> Perimeter walls rebound ball safely instead of going out of bounds.</li>
+              <li><strong>Loop-de-Loop:</strong> Roll into spiral funnel with speed to loop directly toward the cup.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="close-rules-modal-footer-btn" class="btn-primary" style="margin-left: auto;">Got It / Close</button>
         </div>
       </div>
     </div>

@@ -50,12 +50,46 @@ body {
   padding-bottom: 10px;
 }
 
+.landing-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
 .logo-badge {
   font-size: 0.65rem;
   font-weight: bold;
   letter-spacing: 1.5px;
   color: #555;
-  margin-bottom: 3px;
+  margin-bottom: 0;
+}
+
+.btn-rules-header {
+  background-color: #eae3d2;
+  color: #1a1a1a;
+  border: 2px solid #1a1a1a;
+  font-size: 0.7rem;
+  padding: 4px 9px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: inherit;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 2px 2px 0 #1a1a1a;
+  transition: transform 0.05s ease, background-color 0.15s ease;
+}
+
+.btn-rules-header:hover {
+  background-color: #dfd7c2;
+}
+
+.btn-rules-header:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #1a1a1a;
 }
 
 #landing-title {
@@ -408,6 +442,12 @@ body {
 
 .btn-nav:hover {
   background: #f0f0f0;
+}
+
+.nav-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .nav-course-name {
@@ -1113,5 +1153,56 @@ body {
   0% { transform: translate(1px, 1px) rotate(0deg); }
   50% { transform: translate(-1px, -1px) rotate(1deg); }
   100% { transform: translate(1px, -1px) rotate(0deg); }
+}
+
+/* Rules Modal Styling */
+.rules-modal-card {
+  max-width: 440px;
+}
+
+.rules-modal-body {
+  padding: 10px 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rules-section {
+  background: #ffffff;
+  border: 1.5px solid #1a1a1a;
+  border-radius: 4px;
+  padding: 8px 10px;
+  box-shadow: 2px 2px 0 #1a1a1a;
+}
+
+.rules-section-crazy {
+  background: #fff8fc;
+  border-color: #880e4f;
+  box-shadow: 2px 2px 0 #880e4f;
+}
+
+.rules-section-title {
+  margin: 0 0 6px 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #1b5e20;
+  letter-spacing: 0.3px;
+}
+
+.rules-bullets {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: #222;
+}
+
+.rules-bullets li {
+  margin-bottom: 4px;
+}
+
+.rules-bullets li:last-child {
+  margin-bottom: 0;
 }
 

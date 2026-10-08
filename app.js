@@ -2247,6 +2247,16 @@ function hideScorecardModal() {
   document.getElementById('scorecard-modal').style.display = 'none';
 }
 
+function showRulesModal() {
+  const modal = document.getElementById('rules-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function hideRulesModal() {
+  const modal = document.getElementById('rules-modal');
+  if (modal) modal.style.display = 'none';
+}
+
 // Event Listeners
 document.getElementById('start-daily-btn').addEventListener('click', () => startCourse('daily'));
 document.getElementById('card-daily').addEventListener('click', (e) => {
@@ -2282,11 +2292,39 @@ document.getElementById('card-links').addEventListener('click', (e) => {
   if (e.target.tagName !== 'BUTTON') startCourse('links');
 });
 
-document.getElementById('toggle-rules-btn').addEventListener('click', () => {
-  const drawer = document.getElementById('rules-drawer');
-  drawer.classList.toggle('rules-collapsed');
-  drawer.classList.toggle('rules-open');
-});
+const toggleRulesBtn = document.getElementById('toggle-rules-btn');
+if (toggleRulesBtn) {
+  toggleRulesBtn.addEventListener('click', showRulesModal);
+}
+
+const gameRulesBtn = document.getElementById('game-rules-btn');
+if (gameRulesBtn) {
+  gameRulesBtn.addEventListener('click', showRulesModal);
+}
+
+const closeRulesModalBtn = document.getElementById('close-rules-modal-btn');
+if (closeRulesModalBtn) {
+  closeRulesModalBtn.addEventListener('click', hideRulesModal);
+}
+
+const closeRulesModalFooterBtn = document.getElementById('close-rules-modal-footer-btn');
+if (closeRulesModalFooterBtn) {
+  closeRulesModalFooterBtn.addEventListener('click', hideRulesModal);
+}
+
+const rulesModal = document.getElementById('rules-modal');
+if (rulesModal) {
+  rulesModal.addEventListener('click', (e) => {
+    if (e.target === rulesModal) hideRulesModal();
+  });
+}
+
+const scorecardModal = document.getElementById('scorecard-modal');
+if (scorecardModal) {
+  scorecardModal.addEventListener('click', (e) => {
+    if (e.target === scorecardModal) hideScorecardModal();
+  });
+}
 
 document.getElementById('back-to-courses-btn').addEventListener('click', returnToClubhouse);
 document.getElementById('view-scorecard-btn').addEventListener('click', showScorecardModal);
@@ -2492,6 +2530,11 @@ if (canvasWrapper && window.ResizeObserver) {
 // Keyboard navigation (arrows pan, + / - zoom, F fit, B ball, M minimap)
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'Escape') {
+    hideRulesModal();
+    hideScorecardModal();
+    return;
+  }
   const panStep = 35;
   if (e.key === '+' || e.key === '=') {
     zoomBy(1.2);
