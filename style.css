@@ -448,7 +448,7 @@ body {
 }
 
 #crazy-status-bar {
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
   background-color: #f8bbd0;

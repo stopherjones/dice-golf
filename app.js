@@ -123,7 +123,7 @@ let playerPos = { ...currentHole.tee };
 let strokeCount = 0;
 let roundScores = new Array(9).fill(null);
 let shotTrails = [];
-let windmillOpen = true;
+let windmillOpen = false;
 
 function hexDistance(a, b) {
   return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
@@ -599,7 +599,7 @@ function loadHole(index) {
   activeImpactRipple = null;
 
   if (currentHole.isCrazyGolf) {
-    windmillOpen = true;
+    windmillOpen = false;
   }
   updateCrazyStatusBar();
 
@@ -1292,6 +1292,21 @@ function render() {
           } else {
             break;
           }
+        } else if (getTerrainAt(next.q, next.r) === 'windmill') {
+          if (!windmillOpen) {
+            bouncePt = hexToPixel(curr.q, curr.r);
+            break;
+          } else {
+            curr = next;
+            pts.push(hexToPixel(curr.q, curr.r));
+            if (s === range.max) {
+              const push = { q: curr.q + HEX_DIRS[dir].q, r: curr.r + HEX_DIRS[dir].r };
+              if (isCrazyPlayable(push.q, push.r)) {
+                curr = push;
+                pts.push(hexToPixel(curr.q, curr.r));
+              }
+            }
+          }
         } else {
           curr = next;
           pts.push(hexToPixel(curr.q, curr.r));
@@ -1903,6 +1918,7 @@ async function executeShot() {
     let currentLegStart = { ...shotStart };
     let legStepCount = 0;
     let rampBoostCount = 0;
+    let hasWarped = false;
 
     while (remainingSteps > 0) {
       const nextHex = {
@@ -1957,6 +1973,28 @@ async function executeShot() {
           currentStepPos = nextHex;
           legStepCount += 1;
           remainingSteps -= 1;
+          // Cannot finish on a windmill - push 1 space in direction of travel!
+          if (remainingSteps === 0) {
+            const pushHex = {
+              q: currentStepPos.q + HEX_DIRS[currentMoveDir].q,
+              r: currentStepPos.r + HEX_DIRS[currentMoveDir].r
+            };
+            if (isCrazyPlayable(pushHex.q, pushHex.r)) {
+              currentStepPos = pushHex;
+              legStepCount += 1;
+              obstacleNotes.push('⚙️ Windmill momentum: pushed 1 space through the gate');
+            } else {
+              for (let d = 0; d < 6; d++) {
+                const adj = { q: currentStepPos.q + HEX_DIRS[d].q, r: currentStepPos.r + HEX_DIRS[d].r };
+                if (isCrazyPlayable(adj.q, adj.r) && getTerrainAt(adj.q, adj.r) !== 'windmill') {
+                  currentStepPos = adj;
+                  legStepCount += 1;
+                  obstacleNotes.push('⚙️ Windmill momentum: cleared gate to fairway');
+                  break;
+                }
+              }
+            }
+          }
           continue;
         }
       }
@@ -1998,7 +2036,12 @@ async function executeShot() {
         const legitimateDirs = [];
         for (let d = 0; d < 6; d++) {
           const adj = { q: chosenExit.q + HEX_DIRS[d].q, r: chosenExit.r + HEX_DIRS[d].r };
-          if (isCrazyPlayable(adj.q, adj.r) && getTerrainAt(adj.q, adj.r) !== 'tube_in') {
+          if (
+            isCrazyPlayable(adj.q, adj.r) &&
+            getTerrainAt(adj.q, adj.r) !== 'tube_in' &&
+            getTerrainAt(adj.q, adj.r) !== 'tube_out' &&
+            !(getTerrainAt(adj.q, adj.r) === 'windmill' && !windmillOpen)
+          ) {
             legitimateDirs.push({ dir: d, hex: adj });
           }
         }
@@ -2011,6 +2054,7 @@ async function executeShot() {
           currentStepPos = { ...chosenExit };
           legStepCount = 0;
         }
+        hasWarped = true;
         remainingSteps = 0;
         break;
       }
@@ -2047,7 +2091,7 @@ async function executeShot() {
 
     // 4. Scatter Calculation: Balls CANNOT progress onto or beyond bumpers!
     let scatterPos = null;
-    if (scatDist > 0 && getTerrainAt(aimedFinalPos.q, aimedFinalPos.r) !== 'hole') {
+    if (scatDist > 0 && !hasWarped && getTerrainAt(aimedFinalPos.q, aimedFinalPos.r) !== 'hole') {
       let currScat = { ...aimedFinalPos };
       for (let s = 1; s <= scatDist; s++) {
         const nextScat = {
@@ -2058,6 +2102,10 @@ async function executeShot() {
           obstacleNotes.push('💥 Bumper contained scatter roll');
           break;
         }
+        if (getTerrainAt(nextScat.q, nextScat.r) === 'windmill' && !windmillOpen) {
+          obstacleNotes.push('⛔ Windmill blocked scatter roll');
+          break;
+        }
         currScat = nextScat;
       }
       if (currScat.q !== aimedFinalPos.q || currScat.r !== aimedFinalPos.r) {
@@ -2066,6 +2114,30 @@ async function executeShot() {
     }
 
     const landingHex = scatterPos ? { ...scatterPos } : { ...aimedFinalPos };
+
+    // Guarantee: Cannot finish on a windmill - push 1 space in direction of travel
+    if (getTerrainAt(landingHex.q, landingHex.r) === 'windmill') {
+      const travelDir = (scatDist > 0 && scatterPos) ? scatDirIndex : currentMoveDir;
+      const pushHex = {
+        q: landingHex.q + HEX_DIRS[travelDir].q,
+        r: landingHex.r + HEX_DIRS[travelDir].r
+      };
+      if (isCrazyPlayable(pushHex.q, pushHex.r)) {
+        landingHex.q = pushHex.q;
+        landingHex.r = pushHex.r;
+        obstacleNotes.push('⚙️ Windmill momentum: pushed 1 space through the gate');
+      } else {
+        for (let d = 0; d < 6; d++) {
+          const adj = { q: landingHex.q + HEX_DIRS[d].q, r: landingHex.r + HEX_DIRS[d].r };
+          if (isCrazyPlayable(adj.q, adj.r) && getTerrainAt(adj.q, adj.r) !== 'windmill') {
+            landingHex.q = adj.q;
+            landingHex.r = adj.r;
+            obstacleNotes.push('⚙️ Windmill momentum: cleared gate to fairway');
+            break;
+          }
+        }
+      }
+    }
 
     // Finish building legs
     if (legStepCount > 0 || legs.length === 0) {
@@ -2117,7 +2189,7 @@ async function executeShot() {
         const slideQ = playerPos.q + HEX_DIRS[arrow].q;
         const slideR = playerPos.r + HEX_DIRS[arrow].r;
         slopeFrom = { q: playerPos.q, r: playerPos.r };
-        if (isCrazyPlayable(slideQ, slideR)) {
+        if (isCrazyPlayable(slideQ, slideR) && getTerrainAt(slideQ, slideR) !== 'windmill') {
           slopeTo = { q: slideQ, r: slideR };
           playerPos.q = slideQ;
           playerPos.r = slideR;

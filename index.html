@@ -127,7 +127,7 @@
 
         <!-- Crazy Golf Active Obstacle Status Bar (shown only if hole has active interactive obstacles like windmill) -->
         <div id="crazy-status-bar" style="display: none;">
-          <span class="crazy-tag" id="windmill-status-pill">⚙️ Windmill: OPEN</span>
+          <span class="crazy-tag windmill-blocked" id="windmill-status-pill">⛔ Windmill: BLOCKED (Wait)</span>
         </div>
       </header>
 
@@ -287,8 +287,8 @@
               <li><strong>Bumper Rails:</strong> Bumper rails enclose the course — balls cannot progress beyond the bumpers, and bank-ricochet elastically back into play with remaining momentum.</li>
               <li><strong>Speed Ramps:</strong> Boosts the ball forward (+2 hexes) along direction of travel when rolling across or putting from a ramp.</li>
               <li><strong>Slopes:</strong> All strokes slide 1 hex along slope arrows upon landing.</li>
-              <li><strong>Spinning Windmill:</strong> Alternates OPEN &amp; BLOCKED each stroke! Time your roll to slip past the blades.</li>
-              <li><strong>Warp Tubes:</strong> Rolling into any entrance tube (IN) teleports your ball randomly to any available exit tube (OUT) with forward momentum.</li>
+              <li><strong>Spinning Windmill:</strong> Starts CLOSED (blocked) and alternates each stroke! Balls cannot finish on an open windmill; they are pushed 1 space in the direction of travel.</li>
+              <li><strong>Warp Tubes:</strong> Rolling into any entrance tube (IN) teleports your ball randomly to any available exit tube (OUT), exiting in a random legitimate direction.</li>
               <li><strong>Loop-de-Loop:</strong> Roll into spiral funnel with speed to loop directly toward the cup.</li>
             </ul>
           </div>
