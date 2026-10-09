@@ -18,7 +18,7 @@ const ORIGIN_Y = 395;
 
 // Camera state for zoomable and scrollable/pannable hole view
 const camera = {
-  scale: 1.15,
+  scale: 1,
   panX: 0,
   panY: 0,
   minScale: 0.4,
@@ -587,6 +587,9 @@ function loadHole(index) {
   currentHoleIndex = index;
   currentHole = currentHoles[currentHoleIndex];
   playerPos = { ...currentHole.tee };
+  if (!currentHole.isCrazyGolf) {
+    currentSelectedClub = 'driver';
+  }
   strokeCount = 0;
   shotTrails = [];
 
@@ -1591,8 +1594,7 @@ function centerOnBall(positionAtBottom = true) {
   const cssWidth = canvas.width / dpr;
   const cssHeight = canvas.height / dpr;
 
-  // Zoom to the 'ball' zoom option (115%)
-  camera.scale = 1.15;
+  camera.scale = 1;
 
   const ballPx = hexToPixel(playerPos.q, playerPos.r);
   camera.panX = cssWidth / 2 - ballPx.x * camera.scale;
