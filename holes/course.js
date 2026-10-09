@@ -1,11 +1,11 @@
 import { parklandCourse } from './parkland.js';
 import { linksCourse } from './links.js';
-import { crazyHole } from './crazyHole.js';
+import { crazyCourse } from './crazyHole.js';
 import { clipHoleToGrid } from './grid.js';
 
 const parklandHoles = parklandCourse.map(clipHoleToGrid);
 const linksHoles = linksCourse.map(clipHoleToGrid);
-const crazyHoles = [clipHoleToGrid(crazyHole)];
+const crazyHoles = crazyCourse.map(clipHoleToGrid);
 
 export const COURSES = {
   crazy: {
@@ -13,9 +13,9 @@ export const COURSES = {
     name: 'Crazy Golf: Neon Windmill',
     difficulty: 'Arcade / Trick-Shot',
     badge: 'CRAZY GOLF',
-    par: 4,
-    holesCount: 1,
-    description: 'Wild single-hole mini-golf prototype! Putter stroke variations (Tap, Flick, Hit, Whack, Blast), rotating windmill blades, warp tubes, speed ramps, and bumper ricochet rails.',
+    par: 36,
+    holesCount: 9,
+    description: 'Arcade mini-golf with putter stroke variations, spinning windmill blades, warp tubes, speed ramps, and bumper ricochet rails. Holes 2–9 are placeholders awaiting designs.',
     features: ['5 Putter Strokes', 'Bumper Ricochets', 'Warp Tubes', 'Speed Ramps', 'Spinning Windmill', 'Loop-de-Loop'],
     holes: crazyHoles,
     isCrazyGolf: true
