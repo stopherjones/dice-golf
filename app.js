@@ -140,22 +140,48 @@ function getClubRange(club, terrain) {
   }
   let min = 1;
   let max = 6;
-  if (club === 'driver') { min = 5; max = 10; }
-  else if (club === 'longIron') { min = 3; max = 8; }
+  if (club === 'driver') { min = 7; max = 12; }
+  else if (club === 'longIron') { min = 4; max = 9; }
   else if (club === 'shortIron') { min = 1; max = 6; }
   else if (club === 'putter') { min = 1; max = 3; }
 
-  if (terrain === 'sand') {
-    // Sand: short iron the only available club, at -2 disadvantage, min 0
-    min = Math.max(0, min - 2);
-    max = Math.max(0, max - 2);
-  } else if (terrain === 'rough' || terrain === 'deep_rough') {
-    // Rough: -1 to all clubs, min 1
-    min = Math.max(1, min - 1);
-    max = Math.max(1, max - 1);
+  const modifier = getTraditionalClubModifier(club, terrain);
+  const minimum = terrain === 'sand' && club === 'shortIron' ? 0 : 1;
+  return {
+    min: Math.max(minimum, min + modifier),
+    max: Math.max(minimum, max + modifier)
+  };
+}
+
+function getTraditionalClubModifier(club, terrain) {
+  if (club === 'longIron') {
+    if (terrain === 'tee' || terrain === 'fairway') return 1;
+    if (terrain === 'rough') return -1;
+    if (terrain === 'deep_rough') return -2;
+  } else if (club === 'shortIron') {
+    if (terrain === 'sand') return -2;
+    if (terrain === 'deep_rough') return -1;
+  } else if (club === 'putter') {
+    if (terrain === 'fairway') return -1;
+    if (terrain === 'rough') return -2;
   }
-  // No other modifiers (no +1 on the fairway)
-  return { min, max };
+  return 0;
+}
+
+function getTraditionalShotDistance(club, dieRoll, terrain) {
+  let distance = dieRoll;
+  if (club === 'driver') distance += 6;
+  else if (club === 'longIron') distance += 3;
+  else if (club === 'putter') distance = dieRoll <= 2 ? 1 : dieRoll <= 4 ? 2 : 3;
+
+  const minimum = terrain === 'sand' && club === 'shortIron' ? 0 : 1;
+  return Math.max(minimum, distance + getTraditionalClubModifier(club, terrain));
+}
+
+function formatD6Modifier(modifier) {
+  if (modifier > 0) return `1D6+${modifier}`;
+  if (modifier < 0) return `1D6${modifier}`;
+  return '1D6';
 }
 
 let currentAimDir = 0;
@@ -448,14 +474,17 @@ function updateClubOptions() {
 
   updateCrazyStatusBar();
 
-  const isRough = currentTerrain === 'rough' || currentTerrain === 'deep_rough';
   const isSand = currentTerrain === 'sand';
+  const isGreen = currentTerrain === 'green';
+  const longIronModifier = getTraditionalClubModifier('longIron', currentTerrain);
+  const shortIronModifier = getTraditionalClubModifier('shortIron', currentTerrain);
+  const putterRange = getClubRange('putter', currentTerrain);
 
   const standardClubs = [
-    { id: 'driver', title: 'Driver', sub: '1D6+4', allowed: ['tee'] },
-    { id: 'longIron', title: 'Long Iron', sub: isRough ? '1D6+1' : '1D6+2', allowed: isSand ? [] : ['tee', 'fairway', 'rough', 'deep_rough'] },
-    { id: 'shortIron', title: 'Short Iron', sub: isSand ? '1D6-2' : isRough ? '1D6-1' : '1D6', allowed: ['tee', 'fairway', 'rough', 'deep_rough', 'sand', 'green'] },
-    { id: 'putter', title: 'Putter', sub: isRough ? '1D6: 1-2' : '1D6: 1-3', allowed: isSand ? [] : ['tee', 'fairway', 'rough', 'deep_rough', 'green'] }
+    { id: 'driver', title: 'Driver', sub: '1D6+6', allowed: ['tee'] },
+    { id: 'longIron', title: 'Long Iron', sub: formatD6Modifier(3 + longIronModifier), allowed: isSand ? [] : ['tee', 'fairway', 'rough', 'deep_rough'] },
+    { id: 'shortIron', title: 'Short Iron', sub: formatD6Modifier(shortIronModifier), allowed: ['tee', 'fairway', 'rough', 'deep_rough', 'sand'] },
+    { id: 'putter', title: 'Putter', sub: `1D6: ${putterRange.min}${putterRange.max > putterRange.min ? `-${putterRange.max}` : ''}`, allowed: isGreen ? ['green'] : isSand ? [] : ['tee', 'fairway', 'rough'] }
   ];
 
   // Check if current club is allowed from current terrain
@@ -520,19 +549,27 @@ function updateControlsState() {
   rollBtn.disabled = false;
   nextBtn.style.display = 'none';
 
-  // Discrete note on Roll shot button when applicable:
-  // Rough: -1 to all clubs, min 1
-  // Sand: short iron the only available club, at -2 disadvantage, min 0
-  // No other modifiers (no +1 on the fairway)
   const rollBtnNote = document.getElementById('roll-btn-note');
   if (rollBtnNote) {
     if (!currentHole || !currentHole.isCrazyGolf) {
-      if (finalTerrain === 'rough' || finalTerrain === 'deep_rough') {
+      if (finalTerrain === 'tee') {
         rollBtnNote.style.display = 'block';
-        rollBtnNote.textContent = 'Rough: -1 to all clubs, min 1';
+        rollBtnNote.textContent = 'Tee: Driver, Long Iron (+1), or Short Iron';
+      } else if (finalTerrain === 'fairway') {
+        rollBtnNote.style.display = 'block';
+        rollBtnNote.textContent = 'Fairway: Long Iron (+1), Short Iron or Putter (-1)';
+      } else if (finalTerrain === 'rough') {
+        rollBtnNote.style.display = 'block';
+        rollBtnNote.textContent = 'Rough: Long Iron (-1), Short Iron or Putter (-2)';
+      } else if (finalTerrain === 'deep_rough') {
+        rollBtnNote.style.display = 'block';
+        rollBtnNote.textContent = 'Deep rough: Long Iron (-2) or Short Iron (-1)';
       } else if (finalTerrain === 'sand') {
         rollBtnNote.style.display = 'block';
-        rollBtnNote.textContent = 'Sand: short iron the only available club, at -2 disadvantage, min 0';
+        rollBtnNote.textContent = 'Sand: Short Iron only (-2, min 0)';
+      } else if (finalTerrain === 'green') {
+        rollBtnNote.style.display = 'block';
+        rollBtnNote.textContent = 'Green: Putter only';
       } else {
         rollBtnNote.style.display = 'none';
         rollBtnNote.textContent = '';
@@ -1773,34 +1810,20 @@ export function getDistanceExplanation(club, distRoll, effectiveRoll, baseDistan
     return `${distRoll}-2 = distance ${baseDistance} (min 0)`;
   }
 
-  if (currentTerrain === 'rough' || currentTerrain === 'deep_rough') {
-    if (club === 'driver') return `${distRoll}+4-1 = distance ${baseDistance} (min 1)`;
-    if (club === 'longIron') return `${distRoll}+2-1 = distance ${baseDistance} (min 1)`;
-    if (club === 'shortIron') return `${distRoll}-1 = distance ${baseDistance} (min 1)`;
-    if (club === 'putter') return `Roll ${distRoll}-1 = distance ${baseDistance} (min 1)`;
-  }
-
-  // Fairway, Tee, Green: No other modifiers (no +1 on the fairway)
-  if (club === 'driver') {
-    return `${distRoll}+4 = distance ${baseDistance}`;
-  }
-  if (club === 'longIron') {
-    return `${distRoll}+2 = distance ${baseDistance}`;
-  }
-  if (club === 'shortIron') {
-    return `${distRoll} = distance ${baseDistance}`;
-  }
+  const modifier = getTraditionalClubModifier(club, currentTerrain);
+  const baseModifier = club === 'driver' ? 6 : club === 'longIron' ? 3 : 0;
   if (club === 'putter') {
-    if (distRoll !== baseDistance) {
-      return `Roll ${distRoll} = distance ${baseDistance}`;
-    }
-    return baseDistance === 1 ? '1 tile' : `${baseDistance} tiles`;
+    const putterRoll = distRoll <= 2 ? 1 : distRoll <= 4 ? 2 : 3;
+    const adjustment = modifier === 0 ? '' : ` ${modifier > 0 ? '+' : '−'} ${Math.abs(modifier)}`;
+    return `Putter roll ${distRoll} (${putterRoll})${adjustment} = distance ${baseDistance} (min 1)`;
   }
 
-  if (baseDistance !== distRoll) {
-    return `${distRoll} = distance ${baseDistance}`;
-  }
-  return baseDistance === 1 ? '1 tile' : `${baseDistance} tiles`;
+  const totalModifier = baseModifier + modifier;
+  const formula = totalModifier === 0
+    ? `${distRoll}`
+    : `${distRoll}${totalModifier > 0 ? '+' : ''}${totalModifier}`;
+  const roughMinimum = currentTerrain === 'rough' || currentTerrain === 'deep_rough';
+  return `${formula} = distance ${baseDistance}${roughMinimum ? ' (min 1)' : ''}`;
 }
 
 function animateDie(elementId, finalValue, duration = 400, maxSides = 6) {
@@ -2232,26 +2255,7 @@ async function executeShot() {
   const distRoll = Math.floor(Math.random() * 6) + 1;
   await animateDie('die-dist', distRoll);
 
-  let baseDistance = 0;
-  if (currentTerrain === 'sand') {
-    // Sand: short iron the only available club, at -2 disadvantage, min 0
-    baseDistance = Math.max(0, distRoll - 2);
-  } else if (currentTerrain === 'rough' || currentTerrain === 'deep_rough') {
-    // Rough: -1 to all clubs, min 1
-    if (club === 'driver') baseDistance = Math.max(1, distRoll + 4 - 1);
-    else if (club === 'longIron') baseDistance = Math.max(1, distRoll + 2 - 1);
-    else if (club === 'shortIron') baseDistance = Math.max(1, distRoll - 1);
-    else if (club === 'putter') {
-      const putterBase = distRoll <= 2 ? 1 : distRoll <= 4 ? 2 : 3;
-      baseDistance = Math.max(1, putterBase - 1);
-    }
-  } else {
-    // Fairway, Tee, Green: No other modifiers (no +1 on the fairway)
-    if (club === 'driver') baseDistance = distRoll + 4;
-    else if (club === 'longIron') baseDistance = distRoll + 2;
-    else if (club === 'shortIron') baseDistance = distRoll;
-    else if (club === 'putter') baseDistance = distRoll <= 2 ? 1 : distRoll <= 4 ? 2 : 3;
-  }
+  const baseDistance = getTraditionalShotDistance(club, distRoll, currentTerrain);
 
   document.getElementById('sub-dist').innerText = getDistanceExplanation(club, distRoll, distRoll, baseDistance, currentTerrain, false);
 
@@ -2419,6 +2423,9 @@ async function executeShot() {
     }
   }
 
+  if (club === 'driver') {
+    currentSelectedClub = 'longIron';
+  }
   updateControlsState();
 }
 
@@ -2479,11 +2486,16 @@ function updateDailyHoleCardUI() {
   const dateBadgeEl = document.getElementById('daily-date-badge');
   const descEl = document.getElementById('daily-hole-desc');
   const featEl = document.getElementById('daily-features-container');
+  const startButton = document.getElementById('start-daily-btn');
 
   if (titleEl) titleEl.innerText = hole.name;
   if (parTagEl) parTagEl.innerText = `PAR ${hole.par} • 1 HOLE`;
   if (dateBadgeEl) dateBadgeEl.innerText = daily.dateStr || 'Today';
   if (descEl) descEl.innerText = daily.description;
+  if (startButton) {
+    startButton.classList.remove('btn-daily-parkland', 'btn-daily-links', 'btn-daily-crazy');
+    startButton.classList.add(`btn-daily-${daily.sourceCourseId}`);
+  }
   if (featEl) {
     featEl.innerHTML = daily.features.map(f => `<span class="feat-tag">${f}</span>`).join('');
   }

@@ -175,7 +175,8 @@ body {
 }
 
 .btn-crazy {
-  background-color: #c2185b;
+  background-color: #f8bbd0;
+  color: #880e4f;
   box-shadow: 0 3px 0 #880e4f;
 }
 
@@ -220,13 +221,34 @@ body {
 
 .btn-daily {
   flex: 1;
-  background-color: #f57f17;
-  color: #1a1a1a;
-  box-shadow: 0 3px 0 #b35900;
 }
 
-.btn-daily:active {
-  box-shadow: 0 1px 0 #b35900;
+.btn-daily-parkland {
+  background-color: #2e7d32;
+  box-shadow: 0 3px 0 #1b5e20;
+}
+
+.btn-daily-parkland:active {
+  box-shadow: 0 1px 0 #1b5e20;
+}
+
+.btn-daily-links {
+  background-color: #d84315;
+  box-shadow: 0 3px 0 #bf360c;
+}
+
+.btn-daily-links:active {
+  box-shadow: 0 1px 0 #bf360c;
+}
+
+.btn-daily-crazy {
+  background-color: #f8bbd0;
+  color: #880e4f;
+  box-shadow: 0 3px 0 #880e4f;
+}
+
+.btn-daily-crazy:active {
+  box-shadow: 0 1px 0 #880e4f;
 }
 
 .course-par-tag {
