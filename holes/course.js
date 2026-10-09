@@ -15,8 +15,8 @@ export const COURSES = {
     badge: 'CRAZY GOLF',
     par: 36,
     holesCount: 9,
-    description: 'Arcade mini-golf with putter stroke variations, spinning windmill blades, warp tubes, speed ramps, and bumper ricochet rails. Holes 2–9 are placeholders awaiting designs.',
-    features: ['5 Putter Strokes', 'Bumper Ricochets', 'Warp Tubes', 'Speed Ramps', 'Spinning Windmill', 'Loop-de-Loop'],
+    description: 'Arcade mini-golf with putter stroke variations, spinning windmill blades, warp tubes, speed ramps, and bumper ricochet rails across a 9-hole course.',
+    features: ['5 Putter Strokes', 'Bumper Ricochets', 'Warp Tubes', 'Speed Ramps', 'Spinning Windmill'],
     holes: crazyHoles,
     isCrazyGolf: true
   },

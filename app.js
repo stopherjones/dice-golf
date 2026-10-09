@@ -41,7 +41,6 @@ const TERRAIN = {
   tube_in: { color: '#00b4d8', label: 'Warp Tube (In)' },
   tube_out: { color: '#76ff03', label: 'Warp Tube (Out)' },
   ramp: { color: '#ffd600', label: 'Speed Ramp' },
-  funnel: { color: '#7c4dff', label: 'Loop-de-Loop' },
   out_of_bounds: { color: '#161c22', label: 'Out of Bounds' }
 };
 
@@ -276,27 +275,27 @@ export function getBumperReflectionDir(fromPos, incomingDir) {
 }
 
 export function getAllWarpExits() {
-  const exits = [];
+  const exitMap = new Map();
   if (currentHole && currentHole.layout) {
     for (const [key, type] of Object.entries(currentHole.layout)) {
       if (type === 'tube_out') {
         const [q, r] = key.split(',').map(Number);
-        exits.push({ q, r });
+        exitMap.set(`${q},${r}`, { q, r });
       }
     }
   }
-  if (exits.length === 0) {
-    if (currentHole && currentHole.tubeOutPos) {
-      if (Array.isArray(currentHole.tubeOutPos)) {
-        exits.push(...currentHole.tubeOutPos);
-      } else {
-        exits.push(currentHole.tubeOutPos);
+  if (currentHole && currentHole.tubeOutPos) {
+    const list = Array.isArray(currentHole.tubeOutPos) ? currentHole.tubeOutPos : [currentHole.tubeOutPos];
+    for (const pos of list) {
+      if (pos && typeof pos.q === 'number' && typeof pos.r === 'number') {
+        exitMap.set(`${pos.q},${pos.r}`, { q: pos.q, r: pos.r });
       }
-    } else {
-      exits.push({ q: 2, r: -16 });
     }
   }
-  return exits;
+  if (exitMap.size === 0) {
+    exitMap.set('2,-16', { q: 2, r: -16 });
+  }
+  return Array.from(exitMap.values());
 }
 
 function isLand(q, r) {
@@ -663,10 +662,6 @@ function drawHex(x, y, type, arrow = null) {
     fillColor = '#ffd600';
     strokeColor = '#f57f17';
     strokeWidth = 1.4;
-  } else if (type === 'funnel') {
-    fillColor = '#7c4dff';
-    strokeColor = '#4a148c';
-    strokeWidth = 1.4;
   } else if (type === 'crazy_fairway') {
     strokeColor = '#004d40';
   }
@@ -708,10 +703,6 @@ function drawHex(x, y, type, arrow = null) {
     ctx.fillStyle = '#b78103';
     ctx.font = 'bold 8px monospace';
     ctx.fillText('▲▲', x, y);
-  } else if (type === 'funnel') {
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 8px monospace';
-    ctx.fillText('↺', x, y);
   } else if (arrow !== null) {
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 9px monospace';
@@ -997,6 +988,9 @@ async function animateCrazyLegs(legs) {
       await animateCupSink(pLanding);
       await new Promise(r => setTimeout(r, 80));
       if (leg.warpOut) {
+        playerPos = { q: leg.warpOut.q, r: leg.warpOut.r };
+        centerOnBall(false);
+        render();
         await animateTouchdownRipple(hexToPixel(leg.warpOut.q, leg.warpOut.r));
       }
     } else {
@@ -2049,34 +2043,13 @@ async function executeShot() {
         if (legitimateDirs.length > 0) {
           const chosenDirObj = legitimateDirs[Math.floor(Math.random() * legitimateDirs.length)];
           currentStepPos = chosenDirObj.hex;
+          currentMoveDir = chosenDirObj.dir;
           legStepCount = 1;
         } else {
           currentStepPos = { ...chosenExit };
           legStepCount = 0;
         }
         hasWarped = true;
-        remainingSteps = 0;
-        break;
-      }
-
-      // E. Loop-de-Loop Funnel Encounter
-      if (nextTerrain === 'funnel') {
-        if (baseDistance >= 2) {
-          obstacleNotes.push('↺ Loop-de-Loop! Spiral track curved ball onto putting green!');
-          legs.push({
-            start: { ...currentLegStart },
-            aimed: { ...nextHex },
-            end: { ...nextHex },
-            dist: Math.max(1, legStepCount + 1),
-            isFunnel: true
-          });
-          currentStepPos = { q: 1, r: -18 };
-          currentLegStart = { ...currentStepPos };
-          legStepCount = 1;
-        } else {
-          currentStepPos = nextHex;
-          legStepCount += 1;
-        }
         remainingSteps = 0;
         break;
       }
@@ -2140,7 +2113,7 @@ async function executeShot() {
     }
 
     // Finish building legs
-    if (legStepCount > 0 || legs.length === 0) {
+    if (legStepCount > 0 || legs.length === 0 || hasWarped) {
       legs.push({
         start: { ...currentLegStart },
         aimed: { ...aimedFinalPos },

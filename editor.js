@@ -32,8 +32,7 @@ const TERRAIN = {
   windmill: '#00c853',
   tube_in: '#00b4d8',
   tube_out: '#76ff03',
-  ramp: '#ffd600',
-  funnel: '#7c4dff'
+  ramp: '#ffd600'
 };
 
 const TERRAIN_NAMES = {
@@ -51,8 +50,7 @@ const TERRAIN_NAMES = {
   windmill: 'Windmill Gate',
   tube_in: 'Warp Tube (In)',
   tube_out: 'Warp Tube (Out)',
-  ramp: 'Speed Ramp',
-  funnel: 'Loop-de-Loop Funnel'
+  ramp: 'Speed Ramp'
 };
 
 const ARROW_SYMBOLS = ['↑', '↗', '↘', '↓', '↙', '↖'];
@@ -131,9 +129,6 @@ function drawHex(x, y, type, slopeDir = null) {
   } else if (type === 'ramp') {
     strokeColor = '#f57f17';
     strokeWidth = 1.4;
-  } else if (type === 'funnel') {
-    strokeColor = '#4a148c';
-    strokeWidth = 1.4;
   } else if (type === 'crazy_fairway') {
     strokeColor = '#004d40';
   } else if (type === 'sand') {
@@ -180,10 +175,6 @@ function drawHex(x, y, type, slopeDir = null) {
     ctx.fillStyle = '#b78103';
     ctx.font = 'bold 8px monospace';
     ctx.fillText('▲▲', x, y);
-  } else if (type === 'funnel') {
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 8px monospace';
-    ctx.fillText('↺', x, y);
   } else if (type === 'hole') {
     ctx.beginPath();
     ctx.arc(x, y, 2.5, 0, 2 * Math.PI);
@@ -275,7 +266,6 @@ export function generateCode() {
   let windmillPos = null;
   let tubeInPos = null;
   let tubeOutPos = null;
-  let funnelPos = null;
   const rampPos = [];
   
   // Group coordinates by terrain
@@ -289,10 +279,9 @@ export function generateCode() {
     if (val === 'windmill') windmillPos = { q, r };
     if (val === 'tube_in') tubeInPos = { q, r };
     if (val === 'tube_out') tubeOutPos = { q, r };
-    if (val === 'funnel') funnelPos = { q, r };
     if (val === 'ramp') rampPos.push({ q, r });
 
-    if (['crazy_fairway', 'bumper', 'windmill', 'tube_in', 'tube_out', 'ramp', 'funnel'].includes(val)) {
+    if (['crazy_fairway', 'bumper', 'windmill', 'tube_in', 'tube_out', 'ramp'].includes(val)) {
       detectedCrazyElements = true;
     }
 
@@ -305,7 +294,7 @@ export function generateCode() {
   // Desired ordering for clean layout spec
   const terrainOrder = [
     'tee', 'hole', 'green', 'fairway', 'crazy_fairway',
-    'bumper', 'windmill', 'tube_in', 'tube_out', 'ramp', 'funnel',
+    'bumper', 'windmill', 'tube_in', 'tube_out', 'ramp',
     'deep_rough', 'sand', 'water', 'trees'
   ];
   const specLines = [];
@@ -346,7 +335,6 @@ export function generateCode() {
     if (windmillPos) extraProps += `  windmillPos: { q: ${windmillPos.q}, r: ${windmillPos.r} },\n`;
     if (tubeInPos) extraProps += `  tubeInPos: { q: ${tubeInPos.q}, r: ${tubeInPos.r} },\n`;
     if (tubeOutPos) extraProps += `  tubeOutPos: { q: ${tubeOutPos.q}, r: ${tubeOutPos.r} },\n`;
-    if (funnelPos) extraProps += `  funnelPos: { q: ${funnelPos.q}, r: ${funnelPos.r} },\n`;
     if (rampPos.length > 0) {
       extraProps += `  rampPos: [\n${rampPos.map((p) => `    { q: ${p.q}, r: ${p.r} }`).join(',\n')}\n  ],\n`;
     }

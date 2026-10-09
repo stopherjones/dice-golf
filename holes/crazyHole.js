@@ -263,7 +263,7 @@ export const crazyCourse = [
 
   // Hole 5 // 
   {
-  id: 6,
+  id: 5,
   par: 4,
   name: "Love of the Game",
   isCrazyGolf: true,
