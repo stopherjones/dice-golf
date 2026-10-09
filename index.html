@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Paper & Dice Golf</title>
-  <meta name="description" content="A turn-based paper and dice golf game on a hex grid featuring traditional courses and a Crazy Golf arcade mode with custom dice pools and interactive obstacles.">
-  <meta property="og:title" content="Paper & Dice Golf">
-  <meta property="og:description" content="A turn-based paper and dice golf game on a hex grid featuring traditional courses and a Crazy Golf arcade mode with custom dice pools and interactive obstacles.">
+  <title>Dice Golf</title>
+  <meta name="description" content="A turn-based dice golf game on a hex grid featuring traditional courses and a Crazy Golf arcade mode with custom dice pools and interactive obstacles.">
+  <meta property="og:title" content="Dice Golf">
+  <meta property="og:description" content="A turn-based dice golf game on a hex grid featuring traditional courses and a Crazy Golf arcade mode with custom dice pools and interactive obstacles.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,11 +16,11 @@
     <div id="landing-screen">
       <header id="landing-header">
         <div class="landing-header-top">
-          <div class="logo-badge">⛳ 1980s TABLETOP EDITION</div>
-          <button type="button" id="toggle-rules-btn" class="btn-rules-header">📖 Rules &amp; Club Guide</button>
+          <button type="button" id="toggle-rules-btn" class="btn-rules-header">📖 Rules</button>
+          <button type="button" id="show-leaderboard-btn" class="btn-rules-header">🏆 Leaderboard</button>
         </div>
-        <h1 id="landing-title">PAPER &amp; DICE GOLF</h1>
-        <p class="landing-subtitle">Choose your 9-Hole Championship Course</p>
+        <h1 id="landing-title">DICE GOLF</h1>
+        <p class="landing-subtitle">Choose Daily Play or your 9-Hole Course below</p>
       </header>
 
       <div id="course-cards-container">
@@ -223,6 +223,20 @@
         <div class="modal-footer">
           <button id="modal-restart-course-btn" class="btn-secondary">Restart Round</button>
           <button id="modal-clubhouse-btn" class="btn-primary">Return to Courses</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COURSE LEADERBOARDS MODAL -->
+    <div id="leaderboard-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-card leaderboard-modal-card">
+        <div class="modal-header">
+          <h3>🏆 9-Hole Leaderboards</h3>
+          <button id="close-leaderboard-modal-btn" class="btn-close" aria-label="Close leaderboard">✕</button>
+        </div>
+        <div class="modal-body leaderboard-modal-body" id="leaderboard-content"></div>
+        <div class="modal-footer">
+          <button id="close-leaderboard-modal-footer-btn" class="btn-primary">Close</button>
         </div>
       </div>
     </div>

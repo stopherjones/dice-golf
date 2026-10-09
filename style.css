@@ -1204,3 +1204,48 @@ body {
 .rules-bullets li:last-child {
   margin-bottom: 0;
 }
+
+.leaderboard-modal-card {
+  max-width: 440px;
+}
+
+.leaderboard-modal-body {
+  padding: 10px 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.leaderboard-course h4 {
+  margin: 0 0 5px;
+  font-size: 0.78rem;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  border: 1px solid #1a1a1a;
+  padding: 4px 3px;
+}
+
+.leaderboard-table thead th {
+  background: #d6ccb8;
+}
+
+.leaderboard-empty,
+.leaderboard-error {
+  margin: 0;
+  font-size: 0.7rem;
+}
+
+.leaderboard-error {
+  color: #b71c1c;
+  font-weight: bold;
+}

@@ -113,6 +113,9 @@ const HEX_DIRS = [
   { q: -1, r: 0 }   // NW (↖)
 ];
 
+const LEADERBOARD_STORAGE_KEY = 'paper-golf-leaderboards-v1';
+const LEADERBOARD_COURSES = Object.keys(COURSES).filter(courseKey => courseKey !== 'daily');
+
 // Current Game State
 let currentCourseKey = 'parkland';
 let currentHoles = COURSES.parkland.holes;
@@ -123,6 +126,8 @@ let strokeCount = 0;
 let roundScores = new Array(9).fill(null);
 let shotTrails = [];
 let windmillOpen = false;
+let leaderboardSaveError = '';
+let roundLeaderboardSaveAttempted = false;
 
 function hexDistance(a, b) {
   return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
@@ -595,6 +600,7 @@ function startCourse(courseKey) {
   const courseInfo = COURSES[courseKey];
   currentHoles = courseInfo.holes;
   roundScores = new Array(currentHoles.length).fill(null);
+  roundLeaderboardSaveAttempted = false;
 
   document.getElementById('current-course-badge').innerText = courseInfo.name;
   document.getElementById('modal-title').innerText = `${courseInfo.name} Scorecard`;
@@ -617,6 +623,7 @@ function returnToClubhouse() {
 
 function loadHole(index) {
   if (index >= currentHoles.length) {
+    saveCompletedRound();
     showScorecardModal();
     return;
   }
@@ -2552,6 +2559,126 @@ function showScorecardModal() {
   document.getElementById('scorecard-modal').style.display = 'flex';
 }
 
+function readLeaderboards() {
+  const stored = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
+  if (stored === null) return {};
+
+  const parsed = JSON.parse(stored);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Leaderboard data has an invalid format.');
+  }
+
+  for (const courseKey of LEADERBOARD_COURSES) {
+    const scores = parsed[courseKey];
+    if (scores === undefined) continue;
+    if (!Array.isArray(scores) || scores.some(score =>
+      !score
+      || !Number.isInteger(score.strokes)
+      || score.strokes < 1
+      || !Number.isInteger(score.par)
+      || score.par < 1
+      || typeof score.completedAt !== 'string'
+      || Number.isNaN(Date.parse(score.completedAt))
+    )) {
+      throw new Error(`Leaderboard data for ${COURSES[courseKey].name} has an invalid format.`);
+    }
+  }
+
+  return parsed;
+}
+
+function saveCompletedRound() {
+  if (roundLeaderboardSaveAttempted || currentCourseKey === 'daily' || !roundScores.every(Number.isInteger)) return;
+  roundLeaderboardSaveAttempted = true;
+
+  try {
+    const leaderboards = readLeaderboards();
+    const scores = leaderboards[currentCourseKey] || [];
+    scores.push({
+      strokes: roundScores.reduce((total, score) => total + score, 0),
+      par: currentHoles.reduce((total, hole) => total + hole.par, 0),
+      completedAt: new Date().toISOString()
+    });
+    scores.sort((a, b) => a.strokes - b.strokes || Date.parse(a.completedAt) - Date.parse(b.completedAt));
+    leaderboards[currentCourseKey] = scores.slice(0, 5);
+    localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(leaderboards));
+    leaderboardSaveError = '';
+  } catch (error) {
+    leaderboardSaveError = 'This round could not be saved. Check that browser storage is enabled.';
+    console.error('Unable to save the course leaderboard score.', error);
+  }
+}
+
+function renderLeaderboards() {
+  const container = document.getElementById('leaderboard-content');
+  container.innerHTML = '';
+
+  if (leaderboardSaveError) {
+    const errorMessage = document.createElement('p');
+    errorMessage.className = 'leaderboard-error';
+    errorMessage.textContent = leaderboardSaveError;
+    container.appendChild(errorMessage);
+  }
+
+  let leaderboards;
+  try {
+    leaderboards = readLeaderboards();
+  } catch (error) {
+    const errorMessage = document.createElement('p');
+    errorMessage.className = 'leaderboard-error';
+    errorMessage.textContent = 'Leaderboard scores could not be loaded from browser storage.';
+    container.appendChild(errorMessage);
+    console.error('Unable to load course leaderboard scores.', error);
+    return;
+  }
+
+  for (const courseKey of LEADERBOARD_COURSES) {
+    const course = COURSES[courseKey];
+    const scores = (leaderboards[courseKey] || [])
+      .slice()
+      .sort((a, b) => a.strokes - b.strokes || Date.parse(a.completedAt) - Date.parse(b.completedAt))
+      .slice(0, 5);
+    const section = document.createElement('section');
+    section.className = 'leaderboard-course';
+
+    const heading = document.createElement('h4');
+    heading.textContent = course.name;
+    section.appendChild(heading);
+
+    if (scores.length === 0) {
+      const emptyMessage = document.createElement('p');
+      emptyMessage.className = 'leaderboard-empty';
+      emptyMessage.textContent = 'No completed rounds yet.';
+      section.appendChild(emptyMessage);
+    } else {
+      const table = document.createElement('table');
+      table.className = 'leaderboard-table';
+      table.innerHTML = '<thead><tr><th>#</th><th>Score</th><th>To par</th><th>Date</th></tr></thead>';
+      const tbody = document.createElement('tbody');
+      scores.forEach((score, index) => {
+        const row = document.createElement('tr');
+        const diff = score.strokes - score.par;
+        const diffText = diff === 0 ? 'E' : diff > 0 ? `+${diff}` : `${diff}`;
+        const dateText = new Date(score.completedAt).toLocaleDateString('en-GB');
+        row.innerHTML = `<td>${index + 1}</td><td>${score.strokes}</td><td>${diffText}</td><td>${dateText}</td>`;
+        tbody.appendChild(row);
+      });
+      table.appendChild(tbody);
+      section.appendChild(table);
+    }
+    container.appendChild(section);
+  }
+}
+
+function showLeaderboardModal() {
+  renderLeaderboards();
+  document.getElementById('leaderboard-modal').style.display = 'flex';
+}
+
+function hideLeaderboardModal() {
+  document.getElementById('leaderboard-modal').style.display = 'none';
+}
+
 function hideScorecardModal() {
   document.getElementById('scorecard-modal').style.display = 'none';
 }
@@ -2598,6 +2725,14 @@ const toggleRulesBtn = document.getElementById('toggle-rules-btn');
 if (toggleRulesBtn) {
   toggleRulesBtn.addEventListener('click', showRulesModal);
 }
+
+document.getElementById('show-leaderboard-btn').addEventListener('click', showLeaderboardModal);
+document.getElementById('close-leaderboard-modal-btn').addEventListener('click', hideLeaderboardModal);
+document.getElementById('close-leaderboard-modal-footer-btn').addEventListener('click', hideLeaderboardModal);
+const leaderboardModal = document.getElementById('leaderboard-modal');
+leaderboardModal.addEventListener('click', (e) => {
+  if (e.target === leaderboardModal) hideLeaderboardModal();
+});
 
 const gameRulesBtn = document.getElementById('game-rules-btn');
 if (gameRulesBtn) {
