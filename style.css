@@ -174,14 +174,14 @@ body {
   box-shadow: 4px 4px 0 #880e4f;
 }
 
-.btn-crazy {
-  background-color: #f8bbd0;
-  color: #880e4f;
-  box-shadow: 0 3px 0 #880e4f;
+.btn-tee-off.btn-crazy {
+  background-color: #880e4f;
+  color: #fff;
+  box-shadow: 0 3px 0 #56052f;
 }
 
-.btn-crazy:active {
-  box-shadow: 0 1px 0 #880e4f;
+.btn-tee-off.btn-crazy:active {
+  box-shadow: 0 1px 0 #56052f;
 }
 
 .badge-daily {
