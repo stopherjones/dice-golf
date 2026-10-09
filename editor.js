@@ -1,6 +1,3 @@
-import { crazyHole } from './holes/crazyHole.js';
-import { parklandCourse } from './holes/parkland.js';
-import { linksCourse } from './holes/links.js';
 import { COURSES } from './holes/course.js';
 import {
   GRID_Q_MAX,
@@ -480,15 +477,13 @@ export function loadPreset(key) {
 
   if (key === 'daily') {
     loadHoleObject(COURSES.daily.holes[0]);
-  } else if (key === 'crazy') {
-    loadHoleObject(crazyHole);
-  } else if (key === 'parkland1') {
-    loadHoleObject(parklandCourse[0]);
-  } else if (key === 'parkland2') {
-    loadHoleObject(parklandCourse[1]);
-  } else if (key === 'links1') {
-    loadHoleObject(linksCourse[0]);
+    return;
   }
+
+  const [courseKey, holeIndexText] = key.split(':');
+  const holeIndex = Number(holeIndexText);
+  const hole = COURSES[courseKey]?.holes[holeIndex];
+  if (hole) loadHoleObject(hole);
 }
 
 // Canvas interactions
@@ -595,8 +590,22 @@ document.getElementById('sample-loader').addEventListener('change', (e) => {
   loadPreset(e.target.value);
 });
 
+const sampleLoader = document.getElementById('sample-loader');
+for (const courseKey of ['parkland', 'links', 'crazy']) {
+  const course = COURSES[courseKey];
+  const group = document.createElement('optgroup');
+  group.label = course.name;
+  course.holes.forEach((hole, index) => {
+    const option = document.createElement('option');
+    option.value = `${courseKey}:${index}`;
+    option.textContent = `${hole.name} (Hole ${hole.id}, Par ${hole.par})`;
+    group.appendChild(option);
+  });
+  sampleLoader.appendChild(group);
+}
+
 // Initial startup: Load the Crazy Golf Hole preset as the default to showcase Crazy Golf elements!
-loadHoleObject(crazyHole);
+loadHoleObject(COURSES.crazy.holes[0]);
 
 // Set Crazy Fairway as active brush initially
 const initBtn = document.querySelector('[data-brush="crazy_fairway"]');
