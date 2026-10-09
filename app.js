@@ -41,7 +41,8 @@ const TERRAIN = {
   tube_in: { color: '#00b4d8', label: 'Warp Tube (In)' },
   tube_out: { color: '#76ff03', label: 'Warp Tube (Out)' },
   ramp: { color: '#ffd600', label: 'Speed Ramp' },
-  funnel: { color: '#7c4dff', label: 'Loop-de-Loop' }
+  funnel: { color: '#7c4dff', label: 'Loop-de-Loop' },
+  out_of_bounds: { color: '#161c22', label: 'Out of Bounds' }
 };
 
 export const CRAZY_CLUBS = {
@@ -130,7 +131,13 @@ function hexDistance(a, b) {
 
 function getClubRange(club, terrain) {
   if (currentHole && currentHole.isCrazyGolf && CRAZY_DICE[club]) {
-    return { min: CRAZY_DICE[club].min, max: CRAZY_DICE[club].max };
+    let min = CRAZY_DICE[club].min;
+    let max = CRAZY_DICE[club].max;
+    if (terrain === 'ramp') {
+      min += 2;
+      max += 2;
+    }
+    return { min, max };
   }
   let min = 1;
   let max = 6;
@@ -210,17 +217,120 @@ function isAdjacentToHole(pos) {
 function getTerrainAt(q, r) {
   if (!isWithinGrid(q, r)) return 'trees';
   const key = `${q},${r}`;
-  if (currentHole.layout[key]) return currentHole.layout[key];
+  if (currentHole && currentHole.layout && currentHole.layout[key]) return currentHole.layout[key];
+  if (currentHole && currentHole.isCrazyGolf) return 'out_of_bounds';
   if (isGridEdge(q, r)) return 'trees';
   return 'rough';
 }
 
+export function isCrazyPlayable(q, r) {
+  if (!currentHole || !currentHole.isCrazyGolf) {
+    return isLand(q, r);
+  }
+  const key = `${q},${r}`;
+  const terrain = currentHole.layout ? currentHole.layout[key] : null;
+  return !!terrain && terrain !== 'bumper' && terrain !== 'out_of_bounds' && terrain !== 'water' && terrain !== 'trees';
+}
+
+export function isCrazyWall(q, r) {
+  if (!currentHole || !currentHole.isCrazyGolf) return false;
+  const key = `${q},${r}`;
+  const terrain = currentHole.layout ? currentHole.layout[key] : null;
+  return !terrain || terrain === 'bumper' || terrain === 'out_of_bounds';
+}
+
+export function getBumperReflectionDir(fromPos, incomingDir) {
+  const dirR = (incomingDir + 2) % 6;
+  const dirL = (incomingDir + 4) % 6;
+  const hexR = { q: fromPos.q + HEX_DIRS[dirR].q, r: fromPos.r + HEX_DIRS[dirR].r };
+  const hexL = { q: fromPos.q + HEX_DIRS[dirL].q, r: fromPos.r + HEX_DIRS[dirL].r };
+  const canR = isCrazyPlayable(hexR.q, hexR.r);
+  const canL = isCrazyPlayable(hexL.q, hexL.r);
+
+  if (canR && canL) {
+    const wallRight = isCrazyWall(fromPos.q + HEX_DIRS[(incomingDir + 1) % 6].q, fromPos.r + HEX_DIRS[(incomingDir + 1) % 6].r);
+    const wallLeft = isCrazyWall(fromPos.q + HEX_DIRS[(incomingDir + 5) % 6].q, fromPos.r + HEX_DIRS[(incomingDir + 5) % 6].r);
+    if (wallRight && !wallLeft) return dirL;
+    if (wallLeft && !wallRight) return dirR;
+
+    const holePos = getHolePos();
+    const distR = hexDistance(hexR, holePos);
+    const distL = hexDistance(hexL, holePos);
+    return distR <= distL ? dirR : dirL;
+  }
+
+  if (canR) return dirR;
+  if (canL) return dirL;
+
+  const dirRebound = (incomingDir + 3) % 6;
+  const hexRebound = { q: fromPos.q + HEX_DIRS[dirRebound].q, r: fromPos.r + HEX_DIRS[dirRebound].r };
+  if (isCrazyPlayable(hexRebound.q, hexRebound.r)) return dirRebound;
+
+  const hexSR = { q: fromPos.q + HEX_DIRS[(incomingDir + 1) % 6].q, r: fromPos.r + HEX_DIRS[(incomingDir + 1) % 6].r };
+  if (isCrazyPlayable(hexSR.q, hexSR.r)) return (incomingDir + 1) % 6;
+
+  const hexSL = { q: fromPos.q + HEX_DIRS[(incomingDir + 5) % 6].q, r: fromPos.r + HEX_DIRS[(incomingDir + 5) % 6].r };
+  if (isCrazyPlayable(hexSL.q, hexSL.r)) return (incomingDir + 5) % 6;
+
+  return null;
+}
+
+export function getAllWarpExits() {
+  const exits = [];
+  if (currentHole && currentHole.layout) {
+    for (const [key, type] of Object.entries(currentHole.layout)) {
+      if (type === 'tube_out') {
+        const [q, r] = key.split(',').map(Number);
+        exits.push({ q, r });
+      }
+    }
+  }
+  if (exits.length === 0) {
+    if (currentHole && currentHole.tubeOutPos) {
+      if (Array.isArray(currentHole.tubeOutPos)) {
+        exits.push(...currentHole.tubeOutPos);
+      } else {
+        exits.push(currentHole.tubeOutPos);
+      }
+    } else {
+      exits.push({ q: 2, r: -16 });
+    }
+  }
+  return exits;
+}
+
 function isLand(q, r) {
   const terrain = getTerrainAt(q, r);
-  return terrain !== 'water' && terrain !== 'trees';
+  return terrain !== 'water' && terrain !== 'trees' && terrain !== 'out_of_bounds' && terrain !== 'bumper';
 }
 
 function findNearestLand(targetQ, targetR) {
+  if (currentHole && currentHole.isCrazyGolf) {
+    if (isCrazyPlayable(targetQ, targetR)) return { q: targetQ, r: targetR };
+    for (let radius = 1; radius <= 35; radius++) {
+      const candidates = [];
+      for (let q = -radius; q <= radius; q++) {
+        const r1 = Math.max(-radius, -q - radius);
+        const r2 = Math.min(radius, -q + radius);
+        for (let r = r1; r <= r2; r++) {
+          if (Math.abs(q) === radius || Math.abs(r) === radius || Math.abs(q + r) === radius) {
+            const checkQ = targetQ + q;
+            const checkR = targetR + r;
+            if (isCrazyPlayable(checkQ, checkR)) {
+              const distToPrev = hexDistance({ q: checkQ, r: checkR }, playerPos);
+              candidates.push({ q: checkQ, r: checkR, distToPrev });
+            }
+          }
+        }
+      }
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => a.distToPrev - b.distToPrev);
+        return { q: candidates[0].q, r: candidates[0].r };
+      }
+    }
+    return { ...currentHole.tee };
+  }
+
   if (isLand(targetQ, targetR)) return { q: targetQ, r: targetR };
 
   for (let radius = 1; radius <= 35; radius++) {
@@ -271,10 +381,19 @@ function updateScoreboard() {
   document.getElementById('total-score-display').innerText = total.diffStr;
 }
 
+export function hasWindmillOnHole() {
+  if (!currentHole) return false;
+  if (currentHole.windmillPos) return true;
+  if (currentHole.layout) {
+    return Object.values(currentHole.layout).some(t => t === 'windmill');
+  }
+  return false;
+}
+
 function updateCrazyStatusBar() {
   const bar = document.getElementById('crazy-status-bar');
   if (!bar) return;
-  if (!currentHole || !currentHole.isCrazyGolf) {
+  if (!currentHole || !currentHole.isCrazyGolf || !hasWindmillOnHole()) {
     bar.style.display = 'none';
     return;
   }
@@ -289,12 +408,6 @@ function updateCrazyStatusBar() {
       windmillPill.innerText = '⛔ Windmill: BLOCKED (Wait)';
       windmillPill.className = 'crazy-tag windmill-blocked';
     }
-  }
-
-  const perkPill = document.getElementById('active-perk-pill');
-  const clubVal = getSelectedClub();
-  if (perkPill && CRAZY_CLUBS[clubVal]) {
-    perkPill.innerText = CRAZY_CLUBS[clubVal].label;
   }
 }
 
@@ -526,7 +639,11 @@ function drawHex(x, y, type, arrow = null) {
   let strokeColor = '#9ccc65';
   let strokeWidth = 0.8;
 
-  if (type === 'windmill') {
+  if (type === 'out_of_bounds') {
+    fillColor = '#141c22';
+    strokeColor = '#1f272e';
+    strokeWidth = 0.5;
+  } else if (type === 'windmill') {
     fillColor = windmillOpen ? '#00c853' : '#d50000';
     strokeColor = windmillOpen ? '#1b5e20' : '#b71c1c';
     strokeWidth = 1.6;
@@ -1151,40 +1268,102 @@ function render() {
       ctx.fill();
     }
 
-    const minQ = playerPos.q + HEX_DIRS[aimDir].q * range.min;
-    const minR = playerPos.r + HEX_DIRS[aimDir].r * range.min;
-    const minPx = hexToPixel(minQ, minR);
+    if (currentHole && currentHole.isCrazyGolf) {
+      // Step-by-step raycast for crazy golf: stops and reflects off bumper rails!
+      let curr = { ...playerPos };
+      let dir = aimDir;
+      const pts = [currentPosPx];
+      let bouncePt = null;
 
-    const maxQ = playerPos.q + HEX_DIRS[aimDir].q * range.max;
-    const maxR = playerPos.r + HEX_DIRS[aimDir].r * range.max;
-    const maxPx = hexToPixel(maxQ, maxR);
+      for (let s = 1; s <= range.max; s++) {
+        const next = { q: curr.q + HEX_DIRS[dir].q, r: curr.r + HEX_DIRS[dir].r };
+        if (isCrazyWall(next.q, next.r)) {
+          bouncePt = hexToPixel(curr.q, curr.r);
+          const ref = getBumperReflectionDir(curr, dir);
+          if (ref !== null && s < range.max) {
+            dir = ref;
+            const nextAfterRef = { q: curr.q + HEX_DIRS[dir].q, r: curr.r + HEX_DIRS[dir].r };
+            if (isCrazyPlayable(nextAfterRef.q, nextAfterRef.r)) {
+              curr = nextAfterRef;
+              pts.push(hexToPixel(curr.q, curr.r));
+            } else {
+              break;
+            }
+          } else {
+            break;
+          }
+        } else {
+          curr = next;
+          pts.push(hexToPixel(curr.q, curr.r));
+        }
+      }
 
-    // Dotted flight trajectory
-    ctx.beginPath();
-    ctx.setLineDash([3, 3]);
-    ctx.moveTo(currentPosPx.x, currentPosPx.y);
-    ctx.lineTo(minPx.x, minPx.y);
-    ctx.strokeStyle = '#2e7d32';
-    ctx.lineWidth = 1.6;
-    ctx.stroke();
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([3, 3]);
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i].x, pts[i].y);
+      }
+      ctx.strokeStyle = '#00897b';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
 
-    // Solid landing range band
-    ctx.beginPath();
-    ctx.setLineDash([]);
-    ctx.moveTo(minPx.x, minPx.y);
-    ctx.lineTo(maxPx.x, maxPx.y);
-    ctx.strokeStyle = '#1b5e20';
-    ctx.lineWidth = 2.8;
-    ctx.stroke();
+      if (bouncePt) {
+        ctx.beginPath();
+        ctx.arc(bouncePt.x, bouncePt.y, 4, 0, 2 * Math.PI);
+        ctx.fillStyle = '#e91e63';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
 
-    // Max distance target crosshair / dot
-    ctx.beginPath();
-    ctx.arc(maxPx.x, maxPx.y, 3.5, 0, 2 * Math.PI);
-    ctx.fillStyle = '#1b5e20';
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+      const lastPt = pts[pts.length - 1];
+      ctx.beginPath();
+      ctx.arc(lastPt.x, lastPt.y, 3.5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#004d40';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      const minQ = playerPos.q + HEX_DIRS[aimDir].q * range.min;
+      const minR = playerPos.r + HEX_DIRS[aimDir].r * range.min;
+      const minPx = hexToPixel(minQ, minR);
+
+      const maxQ = playerPos.q + HEX_DIRS[aimDir].q * range.max;
+      const maxR = playerPos.r + HEX_DIRS[aimDir].r * range.max;
+      const maxPx = hexToPixel(maxQ, maxR);
+
+      // Dotted flight trajectory
+      ctx.beginPath();
+      ctx.setLineDash([3, 3]);
+      ctx.moveTo(currentPosPx.x, currentPosPx.y);
+      ctx.lineTo(minPx.x, minPx.y);
+      ctx.strokeStyle = '#2e7d32';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      // Solid landing range band
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.moveTo(minPx.x, minPx.y);
+      ctx.lineTo(maxPx.x, maxPx.y);
+      ctx.strokeStyle = '#1b5e20';
+      ctx.lineWidth = 2.8;
+      ctx.stroke();
+
+      // Max distance target crosshair / dot
+      ctx.beginPath();
+      ctx.arc(maxPx.x, maxPx.y, 3.5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#1b5e20';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
   }
 
   // Touchdown Impact Ripple
@@ -1679,6 +1858,13 @@ async function executeShot() {
     }
 
     let obstacleNotes = [];
+
+    // Check if stroke begins resting on a speed ramp (+2 boost!)
+    if (getTerrainAt(shotStart.q, shotStart.r) === 'ramp') {
+      baseDistance += 2;
+      obstacleNotes.push('🚀 Ramp Start (+2 distance boost)');
+    }
+
     document.getElementById('sub-dist').innerText = getDistanceExplanation(null, distRoll, distRoll, baseDistance, null, true, clubConfig);
 
     // 2. Scatter Roll
@@ -1716,37 +1902,42 @@ async function executeShot() {
     const legs = [];
     let currentLegStart = { ...shotStart };
     let legStepCount = 0;
+    let rampBoostCount = 0;
 
     while (remainingSteps > 0) {
       const nextHex = {
         q: currentStepPos.q + HEX_DIRS[currentMoveDir].q,
         r: currentStepPos.r + HEX_DIRS[currentMoveDir].r
       };
-      const nextTerrain = getTerrainAt(nextHex.q, nextHex.r);
 
-      // A. Bumper Rail Encounter: All strokes bank-ricochet off bumpers!
-      if (nextTerrain === 'bumper') {
-        let reflectDir = (currentMoveDir + 3) % 6;
-        if (currentStepPos.q > 0) {
-          reflectDir = (currentMoveDir + 4) % 6;
-        } else if (currentStepPos.q < 0) {
-          reflectDir = (currentMoveDir + 2) % 6;
-        }
+      // A. Bumper Rail Encounter: Balls CANNOT progress onto or beyond bumpers!
+      if (isCrazyWall(nextHex.q, nextHex.r)) {
+        const reflectDir = getBumperReflectionDir(currentStepPos, currentMoveDir);
+
         legs.push({
           start: { ...currentLegStart },
           aimed: { ...nextHex },
-          end: { ...nextHex },
-          dist: Math.max(1, legStepCount + 1),
+          end: { ...currentStepPos },
+          dist: Math.max(1, legStepCount),
           isRicochet: true
         });
-        currentMoveDir = reflectDir;
-        currentStepPos = nextHex;
-        currentLegStart = { ...nextHex };
-        legStepCount = 0;
-        obstacleNotes.push('💥 Bumper rail bank ricochet!');
-        remainingSteps -= 1;
-        continue;
+
+        if (reflectDir !== null && remainingSteps > 1) {
+          obstacleNotes.push('💥 Bumper rail bank ricochet!');
+          currentMoveDir = reflectDir;
+          currentLegStart = { ...currentStepPos };
+          legStepCount = 0;
+          remainingSteps -= 1; // 1 step consumed for bounce
+          continue;
+        } else {
+          obstacleNotes.push('💥 Bumper rail stopped ball');
+          currentLegStart = { ...currentStepPos };
+          remainingSteps = 0;
+          break;
+        }
       }
+
+      const nextTerrain = getTerrainAt(nextHex.q, nextHex.r);
 
       // B. Rotating Windmill Gate Encounter
       if (nextTerrain === 'windmill') {
@@ -1754,7 +1945,7 @@ async function executeShot() {
           obstacleNotes.push('⛔ CLATTER! Ball blocked by spinning windmill blades!');
           legs.push({
             start: { ...currentLegStart },
-            aimed: { ...currentStepPos },
+            aimed: { ...nextHex },
             end: { ...currentStepPos },
             dist: Math.max(1, legStepCount),
             isBlocked: true
@@ -1770,34 +1961,55 @@ async function executeShot() {
         }
       }
 
-      // C. Speed Ramp Encounter (Elevation boost +2)
+      // C. Speed Ramp Encounter (Elevation boost +2 in direction of movement!)
       if (nextTerrain === 'ramp') {
-        obstacleNotes.push('🚀 Speed Ramp Boost! Catapulted +2 tiles forward!');
         currentStepPos = nextHex;
         legStepCount += 1;
-        remainingSteps += 1;
+        if (rampBoostCount < 3) {
+          rampBoostCount += 1;
+          remainingSteps += 1; // enters hex (-1) and gains boost (+2) = net +1 step!
+          obstacleNotes.push('🚀 Speed Ramp Boost (+2 forward momentum)');
+        } else {
+          remainingSteps -= 1;
+        }
         continue;
       }
 
-      // D. Warp Tube Encounter
+      // D. Warp Tube Encounter (Random exit selection: A, B, C -> X, Y, Z!)
       if (nextTerrain === 'tube_in') {
-        obstacleNotes.push('🌀 Warp Tube Activated! Teleported to upper green runway!');
-        const outPos = currentHole.tubeOutPos || { q: 2, r: -16 };
+        const warpExits = getAllWarpExits();
+        const chosenExit = warpExits[Math.floor(Math.random() * warpExits.length)];
+        obstacleNotes.push(`🌀 Warp Tube! Randomly exited at (${chosenExit.q}, ${chosenExit.r})`);
+
         legs.push({
           start: { ...currentLegStart },
           aimed: { ...nextHex },
           end: { ...nextHex },
           dist: Math.max(1, legStepCount + 1),
           isWarpIn: true,
-          warpOut: { ...outPos }
+          warpOut: { ...chosenExit }
         });
-        currentStepPos = { ...outPos };
-        currentLegStart = { ...outPos };
+
+        currentStepPos = { ...chosenExit };
+        currentLegStart = { ...chosenExit };
         legStepCount = 0;
-        const exitStep = { q: currentStepPos.q + HEX_DIRS[0].q, r: currentStepPos.r + HEX_DIRS[0].r };
-        if (isLand(exitStep.q, exitStep.r)) {
-          currentStepPos = exitStep;
+
+        // Exit in a random legitimate direction from the exit tube!
+        const legitimateDirs = [];
+        for (let d = 0; d < 6; d++) {
+          const adj = { q: chosenExit.q + HEX_DIRS[d].q, r: chosenExit.r + HEX_DIRS[d].r };
+          if (isCrazyPlayable(adj.q, adj.r) && getTerrainAt(adj.q, adj.r) !== 'tube_in') {
+            legitimateDirs.push({ dir: d, hex: adj });
+          }
+        }
+
+        if (legitimateDirs.length > 0) {
+          const chosenDirObj = legitimateDirs[Math.floor(Math.random() * legitimateDirs.length)];
+          currentStepPos = chosenDirObj.hex;
           legStepCount = 1;
+        } else {
+          currentStepPos = { ...chosenExit };
+          legStepCount = 0;
         }
         remainingSteps = 0;
         break;
@@ -1833,15 +2045,23 @@ async function executeShot() {
 
     const aimedFinalPos = { ...currentStepPos };
 
-    // 4. Scatter Calculation
+    // 4. Scatter Calculation: Balls CANNOT progress onto or beyond bumpers!
     let scatterPos = null;
     if (scatDist > 0 && getTerrainAt(aimedFinalPos.q, aimedFinalPos.r) !== 'hole') {
-      const scatHex = {
-        q: aimedFinalPos.q + HEX_DIRS[scatDirIndex].q * scatDist,
-        r: aimedFinalPos.r + HEX_DIRS[scatDirIndex].r * scatDist
-      };
-      if (isLand(scatHex.q, scatHex.r) && getTerrainAt(scatHex.q, scatHex.r) !== 'bumper') {
-        scatterPos = { ...scatHex };
+      let currScat = { ...aimedFinalPos };
+      for (let s = 1; s <= scatDist; s++) {
+        const nextScat = {
+          q: currScat.q + HEX_DIRS[scatDirIndex].q,
+          r: currScat.r + HEX_DIRS[scatDirIndex].r
+        };
+        if (!isCrazyPlayable(nextScat.q, nextScat.r)) {
+          obstacleNotes.push('💥 Bumper contained scatter roll');
+          break;
+        }
+        currScat = nextScat;
+      }
+      if (currScat.q !== aimedFinalPos.q || currScat.r !== aimedFinalPos.r) {
+        scatterPos = currScat;
       }
     }
 
@@ -1862,9 +2082,11 @@ async function executeShot() {
       lastLeg.hasScatter = true;
     }
 
-    // Toggle Windmill Gate state for the next stroke!
-    windmillOpen = !windmillOpen;
-    updateCrazyStatusBar();
+    // Toggle Windmill Gate state for the next stroke (only if hole has a windmill)
+    if (hasWindmillOnHole()) {
+      windmillOpen = !windmillOpen;
+      updateCrazyStatusBar();
+    }
 
     // Animate the shot through all legs using the standard golf putter animation!
     await animateCrazyLegs(legs);
@@ -1895,7 +2117,7 @@ async function executeShot() {
         const slideQ = playerPos.q + HEX_DIRS[arrow].q;
         const slideR = playerPos.r + HEX_DIRS[arrow].r;
         slopeFrom = { q: playerPos.q, r: playerPos.r };
-        if (isLand(slideQ, slideR) && getTerrainAt(slideQ, slideR) !== 'bumper') {
+        if (isCrazyPlayable(slideQ, slideR)) {
           slopeTo = { q: slideQ, r: slideR };
           playerPos.q = slideQ;
           playerPos.r = slideR;
