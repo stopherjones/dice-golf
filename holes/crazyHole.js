@@ -466,7 +466,7 @@ export const crazyCourse = [
   
   {
   id: 7,
-  par: 5,
+  par: 3,
   name: "Sweet Rose",
   isCrazyGolf: true,
   windmillPos: { q: 0, r: -16 },
