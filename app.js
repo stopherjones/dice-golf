@@ -413,10 +413,10 @@ function updateScoreboard() {
 
 export function hasWindmillOnHole() {
   if (!currentHole) return false;
-  if (currentHole.windmillPos) return true;
   if (currentHole.layout) {
     return Object.values(currentHole.layout).some(t => t === 'windmill');
   }
+  if (currentHole.windmillPos) return true;
   return false;
 }
 
@@ -1348,6 +1348,10 @@ function render() {
               }
             }
           }
+        } else if (getTerrainAt(next.q, next.r) === 'tube_in') {
+          curr = next;
+          pts.push(hexToPixel(curr.q, curr.r));
+          break;
         } else {
           curr = next;
           pts.push(hexToPixel(curr.q, curr.r));
@@ -2066,7 +2070,7 @@ async function executeShot() {
             isCrazyPlayable(adj.q, adj.r) &&
             getTerrainAt(adj.q, adj.r) !== 'tube_in' &&
             getTerrainAt(adj.q, adj.r) !== 'tube_out' &&
-            !(getTerrainAt(adj.q, adj.r) === 'windmill' && !windmillOpen)
+            getTerrainAt(adj.q, adj.r) !== 'windmill'
           ) {
             legitimateDirs.push({ dir: d, hex: adj });
           }
@@ -2502,6 +2506,19 @@ function updateDailyHoleCardUI() {
   if (startButton) {
     startButton.classList.remove('btn-daily-parkland', 'btn-daily-links', 'btn-daily-crazy');
     startButton.classList.add(`btn-daily-${daily.sourceCourseId}`);
+    if (daily.sourceCourseId === 'crazy') {
+      startButton.style.setProperty('background-color', '#880e4f', 'important');
+      startButton.style.setProperty('box-shadow', '0 3px 0 #56052f', 'important');
+      startButton.style.setProperty('color', '#ffffff', 'important');
+    } else if (daily.sourceCourseId === 'links') {
+      startButton.style.setProperty('background-color', '#d84315', 'important');
+      startButton.style.setProperty('box-shadow', '0 3px 0 #bf360c', 'important');
+      startButton.style.setProperty('color', '#ffffff', 'important');
+    } else {
+      startButton.style.setProperty('background-color', '#2e7d32', 'important');
+      startButton.style.setProperty('box-shadow', '0 3px 0 #1b5e20', 'important');
+      startButton.style.setProperty('color', '#ffffff', 'important');
+    }
   }
   if (featEl) {
     featEl.innerHTML = daily.features.map(f => `<span class="feat-tag">${f}</span>`).join('');

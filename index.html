@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dice Golf</title>
-  <meta name="description" content="A turn-based dice golf game on a hex grid featuring traditional courses and a Crazy Golf arcade mode with custom dice pools and interactive obstacles.">
+  <meta name="description" content="A turn-based dice golf game on a hex grid featuring traditional courses and a Neon Playground arcade mode with custom dice pools and interactive obstacles.">
   <meta property="og:title" content="Dice Golf">
-  <meta property="og:description" content="A turn-based dice golf game on a hex grid featuring traditional courses and a Crazy Golf arcade mode with custom dice pools and interactive obstacles.">
+  <meta property="og:description" content="A turn-based dice golf game on a hex grid featuring traditional courses and a Neon Playground arcade mode with custom dice pools and interactive obstacles.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -35,11 +35,11 @@
             <span class="daily-date-badge" id="daily-date-badge">Today</span>
           </div>
           <p class="course-desc" id="daily-hole-desc">
-            A daily pick from the Parkland, Links, and Crazy Golf courses.
+            A daily pick from the Parkland, Links, and Neon Playground courses.
           </p>
 
           <div class="daily-actions-row">
-            <button class="btn-tee-off btn-daily" id="start-daily-btn" data-course="daily">TEE OFF DAILY HOLE →</button>
+            <button class="btn-tee-off btn-daily btn-daily-crazy" id="start-daily-btn" data-course="daily" style="background-color: #880e4f; box-shadow: 0 3px 0 #56052f; color: #ffffff;">TEE OFF DAILY HOLE →</button>
           </div>
         </div>
 
@@ -69,17 +69,17 @@
           <button class="btn-tee-off btn-links" id="start-links-btn" data-course="links">TEE OFF LINKS →</button>
         </div>
 
-        <!-- Crazy Golf Course -->
+        <!-- Neon Playground Course -->
         <div class="course-card course-card-crazy" id="card-crazy">
           <div class="course-card-top">
-            <span class="badge badge-crazy">⚡ CRAZY GOLF • MINI-GOLF</span>
+            <span class="badge badge-crazy">⚡ NEON PLAYGROUND • MINI-GOLF</span>
             <span class="course-par-tag">PAR 38 • 9 HOLES</span>
           </div>
-          <h2 class="course-name">Neon Windmill &amp; Warp Tubes</h2>
+          <h2 class="course-name">Neon Playground</h2>
           <p class="course-desc">
             Chaotic mini-golf course with pinball-style bumper rails, spinning windmills, ramps, and unpredictable tunnels.
           </p>
-          <button class="btn-tee-off btn-crazy" id="start-crazy-btn" data-course="crazy">TEE OFF CRAZY GOLF →</button>
+          <button class="btn-tee-off btn-crazy" id="start-crazy-btn" data-course="crazy">TEE OFF NEON PLAYGROUND →</button>
         </div>
       </div>
     </div>
@@ -265,7 +265,7 @@
           </div>
 
           <div class="rules-section rules-section-crazy">
-            <h4 class="rules-section-title" style="color: #880e4f;">⚡ CRAZY GOLF (MINI-GOLF) MODE</h4>
+            <h4 class="rules-section-title" style="color: #880e4f;">⚡ NEON PLAYGROUND (MINI-GOLF) MODE</h4>
             <ul class="rules-bullets">
               <li><strong>Putter Stroke Powers:</strong> All clubs are variations of how hard you strike the putter:
                 <ul style="margin: 4px 0; padding-left: 16px;">

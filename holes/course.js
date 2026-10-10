@@ -10,9 +10,9 @@ const crazyHoles = crazyCourse.map(clipHoleToGrid);
 export const COURSES = {
   crazy: {
     id: 'crazy',
-    name: 'Crazy Golf: Neon Windmill',
+    name: 'Neon Playground',
     difficulty: 'Arcade / Trick-Shot',
-    badge: 'CRAZY GOLF',
+    badge: 'NEON PLAYGROUND',
     par: 36,
     holesCount: 9,
     description: 'Arcade mini-golf with putter stroke variations, spinning windmill blades, warp tubes, speed ramps, and bumper ricochet rails across a 9-hole course.',

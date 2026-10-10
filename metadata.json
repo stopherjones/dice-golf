@@ -1,6 +1,6 @@
 {
   "name": "Paper & Dice Golf",
-  "description": "A turn-based paper and dice golf game on a hex grid featuring traditional courses and a Crazy Golf arcade mode with custom dice pools and interactive obstacles.",
+  "description": "A turn-based paper and dice golf game on a hex grid featuring traditional courses and a Neon Playground arcade mode with custom dice pools and interactive obstacles.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
